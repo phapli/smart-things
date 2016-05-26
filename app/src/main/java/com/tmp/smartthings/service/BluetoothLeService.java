@@ -22,7 +22,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -79,11 +78,11 @@ public class BluetoothLeService extends Service {
 
 
     public final static UUID UUID_BL_USER_CHARACTERISTIC =
-            UUID.fromString(GattUtil.BLACK_LIST_CHAR);
+            UUID.fromString(GattUtil.GET_BLACK_LIST_CHAR);
     public final static UUID UUID_CL_USER_CHARACTERISTIC =
-            UUID.fromString(GattUtil.BLACK_LIST_CHAR);
+            UUID.fromString(GattUtil.GET_BLACK_LIST_CHAR);
     public final static UUID UUID_WL_USER_CHARACTERISTIC =
-            UUID.fromString(GattUtil.WHITE_LIST_CHAR);
+            UUID.fromString(GattUtil.GET_WHITE_LIST_CHAR);
     public final static UUID UUID_GEN_PIN_CHARACTERISTIC =
             UUID.fromString(GattUtil.GEN_PIN_CHAR);
     public final static UUID UUID_REQ_OWNER_RIGHT_CHARACTERISTIC =
@@ -166,9 +165,9 @@ public class BluetoothLeService extends Service {
                 intent.putExtra(EXTRA_DATA_ENABLE, data);
             } else if(GattUtil.GEN_PIN_CHAR.equals(uuid.toString())){
                 intent.putExtra(EXTRA_DATA_GENPIN, data);
-            } else if (GattUtil.WHITE_LIST_CHAR.equals(uuid.toString())){
+            } else if (GattUtil.GET_WHITE_LIST_CHAR.equals(uuid.toString())){
                 intent.putExtra(EXTRA_DATA_WLMAC, data);
-            } else if (GattUtil.BLACK_LIST_CHAR.equals(uuid.toString())){
+            } else if (GattUtil.GET_BLACK_LIST_CHAR.equals(uuid.toString())){
 
             }
         }

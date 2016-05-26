@@ -338,7 +338,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                 Toast.makeText(DeviceControlActivity.this, result.message, Toast.LENGTH_SHORT).show();
                 if (result.status == 0) {
                     mGattCharacteristicsMap = (Map<String, BluetoothGattCharacteristic>) result.getData("gatt_map");
-                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.USER_PIN_CHAR), mCommonUtil.intToByte(mDevice.getPin()));
+                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.AUTH_PIN_CHAR), mCommonUtil.intToByte(mDevice.getPin()));
                 } else {
                     finish();
                 }

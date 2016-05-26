@@ -23,7 +23,6 @@ import android.util.Log;
 import com.tmp.smartthings.model.Result;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -43,20 +42,20 @@ public class GattUtil {
 
     // Characteristic
     public static final String SWITCH_CHAR = "0000ffa1-0000-1000-8000-00805f9b34fb";
-    public static final String USER_PIN_CHAR = "0000ffb0-0000-1000-8000-00805f9b34fb";
-    public static final String BLACK_LIST_CHAR = "0000ffa7-0000-1000-8000-00805f9b34fb";
-    public static final String CONNECTED_LIST_CHAR = "0000ffa9-0000-1000-8000-00805f9b34fb";
-    public static final String WHITE_LIST_CHAR = "0000ffa6-0000-1000-8000-00805f9b34fb";
+    public static final String AUTH_PIN_CHAR = "0000ffb0-0000-1000-8000-00805f9b34fb";
+    public static final String GET_BLACK_LIST_CHAR = "0000ffa7-0000-1000-8000-00805f9b34fb";
+    public static final String GET_CONNECTED_LIST_CHAR = "0000ffa9-0000-1000-8000-00805f9b34fb";
+    public static final String GET_WHITE_LIST_CHAR = "0000ffa6-0000-1000-8000-00805f9b34fb";
     public static final String GEN_PIN_CHAR = "0000ffab-0000-1000-8000-00805f9b34fb";
     public static final String REQ_OWNER_RIGHT_CHAR = "0000ffae-0000-1000-8000-00805f9b34fb";
     public static final String CHANGE_OWNER_PIN_CHAR = "0000ffaf-0000-1000-8000-00805f9b34fb";
     public static List<String> characteristics = new ArrayList<>();
     static {
         characteristics.add(SWITCH_CHAR);
-        characteristics.add(USER_PIN_CHAR);
-        characteristics.add(BLACK_LIST_CHAR);
-        characteristics.add(CONNECTED_LIST_CHAR);
-        characteristics.add(WHITE_LIST_CHAR);
+        characteristics.add(AUTH_PIN_CHAR);
+        characteristics.add(GET_BLACK_LIST_CHAR);
+        characteristics.add(GET_CONNECTED_LIST_CHAR);
+        characteristics.add(GET_WHITE_LIST_CHAR);
         characteristics.add(GEN_PIN_CHAR);
         characteristics.add(REQ_OWNER_RIGHT_CHAR);
         characteristics.add(CHANGE_OWNER_PIN_CHAR);

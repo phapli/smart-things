@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:gravity="center_vertical"
+    android:layout_margin="@dimen/activity_horizontal_margin"
+    android:layout_height="70dp">
+
+    <ImageView
+        android:id="@+id/iv_device_list_icon"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:src="@drawable/ic_nav_item"
+        android:layout_alignParentLeft="true"
+        />
+
+    <TextView
+        android:id="@+id/tv_device_list_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:text="Name"
+        android:singleLine="true"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_toRightOf="@id/iv_device_list_icon"
+        />
+
+    <TextView
+        android:id="@+id/tv_device_list_address"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:text="Address"
+        android:textSize="14sp"
+        android:layout_below="@id/tv_device_list_name"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_toRightOf="@id/iv_device_list_icon"
+        />
+</RelativeLayout>

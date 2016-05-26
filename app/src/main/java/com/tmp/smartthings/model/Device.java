@@ -1,0 +1,85 @@
+package com.tmp.smartthings.model;
+
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+import com.activeandroid.annotation.Table;
+import com.orm.SugarRecord;
+import com.orm.dsl.Unique;
+
+/**
+ * Created by phapli on 17/05/2016.
+ */
+@Table(name = "Device")
+public class Device extends Model{
+    public enum Device_Type {
+        LIGHT_SWITCH, DOOR_LOCK
+    }
+
+    @Column(name = "address", index = true, unique = true)
+    private String address;
+
+    @Column(name = "name")
+    private String name;
+
+    @Column(name = "pin")
+    private int pin;
+
+    @Column(name = "device_type")
+    private Device_Type device_type;
+
+    @Column(name = "position")
+    private int position;
+
+    public Device() {
+        super();
+    }
+
+    public Device(String name, String address, Device_Type device_type, int pin, int position) {
+        super();
+        this.address = address;
+        this.name = name;
+        this.device_type = device_type;
+        this.pin = pin;
+        this.position = position;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Device_Type getDevice_type() {
+        return device_type;
+    }
+
+    public void setDevice_type(Device_Type device_type) {
+        this.device_type = device_type;
+    }
+
+    public int getPin() {
+        return pin;
+    }
+
+    public void setPin(int pin) {
+        this.pin = pin;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+}

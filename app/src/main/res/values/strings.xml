@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Smart Things</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_device_control">Device Control</string>
+    <string name="title_activity_scan_device">Scan Device</string>
+    <string name="ble_not_supported">BLE is not supported</string>
+    <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
+    <string name="input_pin_title">Input Pin</string>
+    <string name="input_pin_content">Input Pin Content</string>
+    <string name="submit">Submit</string>
+    <string name="input_pin_hint">Device Pin</string>
+    <string name="input_pin_prefill" />
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="scanning">Scanning...</string>
+    <string name="input_name_content">Input New Name</string>
+    <string name="input_name_hint">Device Name</string>
+    <string name="agree">AGREE</string>
+    <string name="disagree">DISAGREE</string>
+    <string name="confirm_delete">Are you sure to delete</string>
+    <string name="confirm_delete_title">Delete device</string>
+    <string name="old_pin">Old Pin</string>
+    <string name="show_pin">Show Pin</string>
+    <string name="change_pin">Change Pin</string>
+    <string name="add_user">Add User</string>
+    <string name="remove_device">Remove Device</string>
+    <string name="edit_name">Edit Name</string>
+    <string name="new_pin">New Pin</string>
+</resources>

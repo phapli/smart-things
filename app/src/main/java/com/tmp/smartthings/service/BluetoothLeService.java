@@ -132,10 +132,6 @@ public class BluetoothLeService extends Service {
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-                List<BluetoothGattDescriptor> bluetoothGattDescriptors = characteristic.getDescriptors();
-                if (bluetoothGattDescriptors != null && bluetoothGattDescriptors.size() > 0) {
-                    BluetoothGattDescriptor bluetoothGattDescriptor = bluetoothGattDescriptors.get(0);
-                }
             }
         }
 
@@ -163,75 +159,20 @@ public class BluetoothLeService extends Service {
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
-
-        // This is special handling for the Heart Rate Measurement profile.  Data parsing is
-        // carried out as per profile specifications:
-        // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        if (UUID_ENABLE_ACCELERATION_CHARACTERISTIC.equals(characteristic.getUuid())) {
-//            int flag = characteristic.getProperties();
-//            int format = -1;
-//            if ((flag & 0x01) != 0) {
-//                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-//                Log.d(TAG, "Heart rate format UINT16.");
-//            } else {
-//                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-//                Log.d(TAG, "Heart rate format UINT8.");
-//            }
-//            final int heartRate = characteristic.getIntValue(format, 1);
-//            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-//            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
+        final byte[] data = characteristic.getValue();
+        UUID uuid = characteristic.getUuid();
+        if (data != null && data.length > 0 && uuid!=null) {
+            if(GattUtil.SWITCH_CHAR.equals(uuid.toString())) {
                 intent.putExtra(EXTRA_DATA_ENABLE, data);
-            }
-            sendBroadcast(intent);
-        }
-        /*HAL_MODIFY*/
-        else if (UUID_GEN_PIN_CHARACTERISTIC.equals(characteristic.getUuid())) {
-//            int flag = characteristic.getProperties();
-//            int format = -1;
-//            if ((flag & 0x01) != 0) {
-//                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-//                Log.d(TAG, "Heart rate format UINT16.");
-//            } else {
-//                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-//                Log.d(TAG, "Heart rate format UINT8.");
-//            }
-//            final int heartRate = characteristic.getIntValue(format, 1);
-//            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-//            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
+            } else if(GattUtil.GEN_PIN_CHAR.equals(uuid.toString())){
                 intent.putExtra(EXTRA_DATA_GENPIN, data);
-            }
-            sendBroadcast(intent);
-        } else if (UUID_WL_USER_CHARACTERISTIC.equals(characteristic.getUuid())) {
-
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
+            } else if (GattUtil.WHITE_LIST_CHAR.equals(uuid.toString())){
                 intent.putExtra(EXTRA_DATA_WLMAC, data);
+            } else if (GattUtil.BLACK_LIST_CHAR.equals(uuid.toString())){
+
             }
-            sendBroadcast(intent);
         }
-
-
-
-        /*HAL_MODIFY*/
-        else {
-            // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for (byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                //intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
-                Log.d(TAG, "broadcastUpdate: DATA " + new String(data) + "\n" + stringBuilder.toString());
-            }
-
-        }
-
+        sendBroadcast(intent);
     }
 
     public class LocalBinder extends Binder {

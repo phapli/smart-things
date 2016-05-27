@@ -62,36 +62,10 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA_ENABLE =
-            "com.example.bluetooth.le.EXTRA_DATA_ENABLE";
-    public final static String EXTRA_DATA_GENPIN =
-            "com.example.bluetooth.le.EXTRA_DATA_GENPIN";
-    public final static String EXTRA_DATA_WLMAC =
-            "com.example.bluetooth.le.EXTRA_DATA_GENPIN";
-
-    public final static UUID UUID_ACCELERATION_SERVICE =
-            UUID.fromString(GattUtil.CONTROL_SERVICE);
-
-    public final static UUID UUID_ENABLE_ACCELERATION_CHARACTERISTIC =
-            UUID.fromString(GattUtil.SWITCH_CHAR);
-    /*HAL_MODIFY*/
-
-
-    public final static UUID UUID_BL_USER_CHARACTERISTIC =
-            UUID.fromString(GattUtil.GET_BLACK_LIST_CHAR);
-    public final static UUID UUID_CL_USER_CHARACTERISTIC =
-            UUID.fromString(GattUtil.GET_BLACK_LIST_CHAR);
-    public final static UUID UUID_WL_USER_CHARACTERISTIC =
-            UUID.fromString(GattUtil.GET_WHITE_LIST_CHAR);
-    public final static UUID UUID_GEN_PIN_CHARACTERISTIC =
-            UUID.fromString(GattUtil.GEN_PIN_CHAR);
-    public final static UUID UUID_REQ_OWNER_RIGHT_CHARACTERISTIC =
-            UUID.fromString(GattUtil.REQ_OWNER_RIGHT_CHAR);
-    public final static UUID UUID_CHANGE_OWNER_PIN_CHARACTERISTIC =
-            UUID.fromString(GattUtil.CHANGE_OWNER_PIN_CHAR);
-
-    /*HAL_MODIFY*/
-
+    public final static String EXTRA_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String EXTRA_UUID =
+            "com.example.bluetooth.le.EXTRA_UUID";
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -137,7 +111,6 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                //broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
                 readCharacteristic(characteristic);
             }
 
@@ -160,16 +133,9 @@ public class BluetoothLeService extends Service {
         final Intent intent = new Intent(action);
         final byte[] data = characteristic.getValue();
         UUID uuid = characteristic.getUuid();
-        if (data != null && data.length > 0 && uuid!=null) {
-            if(GattUtil.SWITCH_CHAR.equals(uuid.toString())) {
-                intent.putExtra(EXTRA_DATA_ENABLE, data);
-            } else if(GattUtil.GEN_PIN_CHAR.equals(uuid.toString())){
-                intent.putExtra(EXTRA_DATA_GENPIN, data);
-            } else if (GattUtil.GET_WHITE_LIST_CHAR.equals(uuid.toString())){
-                intent.putExtra(EXTRA_DATA_WLMAC, data);
-            } else if (GattUtil.GET_BLACK_LIST_CHAR.equals(uuid.toString())){
-
-            }
+        if (data != null && data.length > 0 && uuid != null) {
+            intent.putExtra(EXTRA_DATA, data);
+            intent.putExtra(EXTRA_UUID, uuid.toString());
         }
         sendBroadcast(intent);
     }

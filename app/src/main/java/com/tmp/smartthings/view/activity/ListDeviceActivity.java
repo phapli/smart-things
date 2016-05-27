@@ -13,20 +13,19 @@ import android.widget.TextView;
 
 import com.activeandroid.ActiveAndroid;
 import com.github.clans.fab.FloatingActionButton;
-import com.orm.SugarContext;
 import com.tmp.smartthings.R;
 import com.tmp.smartthings.model.Device;
 import com.tmp.smartthings.util.DeviceUtil;
-import com.tmp.smartthings.view.adapter.DeviceListAdapter;
+import com.tmp.smartthings.view.adapter.ListDeviceAdapter;
 
 import java.util.List;
 
-public class DeviceListActivity extends AppCompatActivity {
+public class ListDeviceActivity extends AppCompatActivity {
 
-    private static final String TAG = DeviceListActivity.class.getName();
+    private static final String TAG = ListDeviceActivity.class.getName();
     private ListView mListView;
     private FloatingActionButton mFabAdd;
-    private DeviceListAdapter mAdapter;
+    private ListDeviceAdapter mAdapter;
     private TextView mTitle;
     private DeviceUtil mDeviceUtil = DeviceUtil.getInstance();
 
@@ -43,13 +42,13 @@ public class DeviceListActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         mListView = (ListView) findViewById(R.id.lv_device_list);
-        mAdapter = new DeviceListAdapter(this);
+        mAdapter = new ListDeviceAdapter(this);
         mListView.setAdapter(mAdapter);
 
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(DeviceListActivity.this, DeviceControlActivity.class);
+                Intent intent = new Intent(ListDeviceActivity.this, DeviceControlActivity.class);
                 Device device = mAdapter.getItem(position);
                 intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
                 intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
@@ -63,7 +62,7 @@ public class DeviceListActivity extends AppCompatActivity {
         mFabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(DeviceListActivity.this, ScanDeviceActivity.class);
+                Intent intent = new Intent(ListDeviceActivity.this, ScanDeviceActivity.class);
                 startActivity(intent);
             }
         });

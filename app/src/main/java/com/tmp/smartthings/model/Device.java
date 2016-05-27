@@ -30,17 +30,21 @@ public class Device extends Model{
     @Column(name = "position")
     private int position;
 
+    @Column(name = "last_use")
+    private long last_use;
+
     public Device() {
         super();
     }
 
-    public Device(String name, String address, Device_Type device_type, int pin, int position) {
+    public Device(String name, String address, Device_Type device_type, int pin, int position, long last_use) {
         super();
         this.address = address;
         this.name = name;
         this.device_type = device_type;
         this.pin = pin;
         this.position = position;
+        this.last_use = last_use;
     }
 
     public String getAddress() {
@@ -81,5 +85,13 @@ public class Device extends Model{
 
     public void setPosition(int position) {
         this.position = position;
+    }
+
+    public long getLast_use() {
+        return last_use;
+    }
+
+    public void setLast_use(long last_use) {
+        this.last_use = last_use;
     }
 }

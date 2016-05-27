@@ -40,6 +40,7 @@ import com.tmp.smartthings.util.DeviceUtil;
 import com.tmp.smartthings.util.GattUtil;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Map;
 
 public class DeviceControlActivity extends AppCompatActivity {
@@ -51,7 +52,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
     private static final String TAG = DeviceControlActivity.class.getName();
     private FloatingActionMenu mFabMenu;
-    private FloatingActionButton mFabSwitch;
+    private ImageView mSwitch;
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics;
     private TextView mDataText;
@@ -83,9 +84,11 @@ public class DeviceControlActivity extends AppCompatActivity {
         mNew = intent.getBooleanExtra(EXTRAS_DEVICE_NEW, false);
 
         if (mNew) {
-            mDevice = new Device(mDeviceName, mDeviceAddress, Device.Device_Type.LIGHT_SWITCH, mPin, 0);
+            mDevice = new Device(mDeviceName, mDeviceAddress, Device.Device_Type.LIGHT_SWITCH, mPin, 0, new Date().getTime());
         } else {
             mDevice = mDeviceUtil.get(mDeviceAddress);
+            mDevice.setLast_use(new Date().getTime());
+            mDevice.save();
         }
 
         setContentView(R.layout.activity_device_control);
@@ -102,10 +105,10 @@ public class DeviceControlActivity extends AppCompatActivity {
         mFabAddUser = (FloatingActionButton) findViewById(R.id.fab_device_control_add_user);
         mFabChangePass = (FloatingActionButton) findViewById(R.id.fab_device_control_change_pass);
         mFabDeleteDevice = (FloatingActionButton) findViewById(R.id.fab_device_control_delete_device);
-        mFabSwitch = (FloatingActionButton) findViewById(R.id.fab_device_control_switch);
+        mSwitch = (ImageView) findViewById(R.id.iv_device_control_switch);
         mDataText = (TextView) findViewById(R.id.tv_control_device_data);
 
-        mFabSwitch.setOnClickListener(new View.OnClickListener() {
+        mSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 byte[] value = {0x00, 0x00};
@@ -121,8 +124,8 @@ public class DeviceControlActivity extends AppCompatActivity {
                         value[i] = 0x00;
                     }
                 }
-                Log.d(TAG, "ENABLE_AAAAAAAA");
                 mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR), value);
+                mFabMenu.close(true);
             }
         });
 
@@ -144,6 +147,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                                 mTitle.setText(input.toString());
                             }
                         }).show();
+                mFabMenu.close(true);
             }
         });
 
@@ -166,12 +170,14 @@ public class DeviceControlActivity extends AppCompatActivity {
                             }
                         })
                         .show();
+                mFabMenu.close(true);
             }
         });
 
         mFabChangePass.setOnClickListener(new View.OnClickListener() {
             public boolean isOldPinView;
             public boolean isNewPinView;
+
             @Override
             public void onClick(View v) {
                 MaterialDialog dialog = new MaterialDialog.Builder(DeviceControlActivity.this)
@@ -188,8 +194,8 @@ public class DeviceControlActivity extends AppCompatActivity {
                                 try {
                                     oldPin = Integer.valueOf(oldPinInput.getText().toString());
                                     newPin = Integer.valueOf(newPinInput.getText().toString());
-                                    if(oldPin == mDevice.getPin()){
-                                        mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.CHANGE_OWNER_PIN_CHAR),mCommonUtil.intToByte(newPin));
+                                    if (oldPin == mDevice.getPin()) {
+                                        mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.CHANGE_OWNER_PIN_CHAR), mCommonUtil.intToByte(newPin));
                                         mDevice.setPin(newPin);
                                         mDevice.save();
                                         return;
@@ -211,7 +217,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        positiveAction.setEnabled(s.toString().trim().length() == 5 && newPinInput.getText().toString().length()==5);
+                        positiveAction.setEnabled(s.toString().trim().length() == 5 && newPinInput.getText().toString().length() == 5);
                     }
 
                     @Override
@@ -226,7 +232,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        positiveAction.setEnabled(s.toString().trim().length() == 5 && oldPinInput.getText().toString().length()==5);
+                        positiveAction.setEnabled(s.toString().trim().length() == 5 && oldPinInput.getText().toString().length() == 5);
                     }
 
                     @Override
@@ -241,7 +247,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         oldPinInput.setInputType(!isOldPinView ? InputType.TYPE_NUMBER_VARIATION_PASSWORD | InputType.TYPE_NUMBER_FLAG_SIGNED : InputType.TYPE_NUMBER_VARIATION_NORMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
                         oldPinInput.setTransformationMethod(!isOldPinView ? PasswordTransformationMethod.getInstance() : null);
-                        showOldPin.setImageResource(!isOldPinView? R.drawable.ic_eye_grey600_18dp: R.drawable.ic_eye_off_grey600_18dp);
+                        showOldPin.setImageResource(!isOldPinView ? R.drawable.ic_eye_grey600_18dp : R.drawable.ic_eye_off_grey600_18dp);
                         isOldPinView = !isOldPinView;
                     }
                 });
@@ -252,13 +258,14 @@ public class DeviceControlActivity extends AppCompatActivity {
                     public void onClick(View v) {
                         newPinInput.setInputType(!isNewPinView ? InputType.TYPE_NUMBER_VARIATION_PASSWORD : InputType.TYPE_NUMBER_VARIATION_NORMAL);
                         newPinInput.setTransformationMethod(!isNewPinView ? PasswordTransformationMethod.getInstance() : null);
-                        showNewPin.setImageResource(!isNewPinView? R.drawable.ic_eye_grey600_18dp: R.drawable.ic_eye_off_grey600_18dp);
+                        showNewPin.setImageResource(!isNewPinView ? R.drawable.ic_eye_grey600_18dp : R.drawable.ic_eye_off_grey600_18dp);
                         isNewPinView = !isNewPinView;
                     }
                 });
 
                 dialog.show();
                 positiveAction.setEnabled(false); // disabled by default
+                mFabMenu.close(true);
             }
         });
 
@@ -266,6 +273,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.GEN_PIN_CHAR));
+                mFabMenu.close(true);
             }
         });
 
@@ -348,46 +356,64 @@ public class DeviceControlActivity extends AppCompatActivity {
                     Toast.makeText(DeviceControlActivity.this, "save device: " + id, Toast.LENGTH_SHORT).show();
                     mSaved = true;
                 }
-                byte[] data_enable = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA_ENABLE);
-                byte[] data_genpin = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA_GENPIN);
-                byte[] data_WLMAC = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA_WLMAC);
 
-                if (data_enable != null) {
-                    displayData(data_enable);
-                } else if (data_genpin != null) {
-//                    Integer data_genpin_int = fromByteArray2(data_genpin);
-//                    StringBuilder sb = new StringBuilder();
-//                    sb.append("");
-//                    sb.append(data_genpin_int);
-//                    String data_genpin_string = sb.toString();
-//                    displayPin(data_genpin_string);
-                } else if (data_WLMAC != null) {
-//                    displayMAC(data_WLMAC);
-                } else ;
+                byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
+                String uuid = intent.getStringExtra(BluetoothLeService.EXTRA_UUID);
+
+                if (data != null) {
+                    switch (uuid) {
+                        case GattUtil.SWITCH_CHAR:
+                            deviceCurrentStatus = data;
+                            updateSwitchStage(data[1] == 0x01);
+                            break;
+                        case GattUtil.GEN_PIN_CHAR:
+                            processGenPinData(data);
+                            break;
+                        case GattUtil.GET_CONNECTED_LIST_CHAR:
+                            processLogData(data);
+                            break;
+                    }
+                    displayData(uuid, data);
+                }
             }
         }
     };
 
+    private void processLogData(byte[] data) {
+        Toast.makeText(this, "Log: " + mCommonUtil.byteToHex(data), Toast.LENGTH_SHORT).show();
+    }
+
+    private void processGenPinData(byte[] data) {
+        if (data.length != 2) {
+            Toast.makeText(this, "Fail to generate new Pin", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new MaterialDialog.Builder(DeviceControlActivity.this)
+                .title(R.string.add_user)
+                .content("pin: " + mCommonUtil.byteToInt(data) + "\nNow, you must disconnect on this device for another device access.")
+                .positiveText(R.string.disconnected)
+                .negativeText(R.string.late)
+                .onPositive(new MaterialDialog.SingleButtonCallback() {
+                    @Override
+                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                        mBluetoothLeService.disconnect();
+                    }
+                })
+                .show();
+    }
+
 
     private void updateSwitchStage(boolean enable) {
-        // TODO
         if (enable) {
-            mFabSwitch.setColorNormalResId(R.color.md_btn_selected);
+            mSwitch.setImageResource(R.drawable.light_bulb_green);
         } else {
-            mFabSwitch.setColorNormalResId(R.color.colorAccent);
+            mSwitch.setImageResource(R.drawable.light_bulb_gray);
         }
     }
 
-    private void displayData(byte[] data) {
-        if (data != null) {
-            deviceCurrentStatus = data;
-            updateSwitchStage(data[1] == 0x01);
-            if (data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for (byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                mDataText.setText(stringBuilder.toString());
-            }
+    private void displayData(String uuid, byte[] data) {
+        if (data.length > 0) {
+            mDataText.setText(mGattUtil.shortName(uuid) + ": " + mCommonUtil.byteToHex(data));
         }
     }
 

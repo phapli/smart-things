@@ -105,4 +105,11 @@ public class GattUtil {
         }
         return result;
     }
+
+    public String shortName(String uuid) {
+        if(uuid!=null && uuid.length()>8){
+            return uuid.substring(4,8);
+        }
+        return "NG";
+    }
 }

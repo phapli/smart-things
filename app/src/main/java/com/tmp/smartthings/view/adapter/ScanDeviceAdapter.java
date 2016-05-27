@@ -1,8 +1,6 @@
 package com.tmp.smartthings.view.adapter;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,14 +17,14 @@ import java.util.List;
 /**
  * Created by phapli on 17/05/2016.
  */
-public class DeviceListAdapter extends BaseAdapter {
+public class ScanDeviceAdapter extends BaseAdapter {
 
     private List<Device> devices = Collections.emptyList();
 
     private final Context context;
 
     // the context is needed to inflate views in getView()
-    public DeviceListAdapter(Context context) {
+    public ScanDeviceAdapter(Context context) {
         this.context = context;
     }
 

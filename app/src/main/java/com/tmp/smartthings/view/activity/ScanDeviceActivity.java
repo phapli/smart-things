@@ -13,13 +13,8 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,16 +25,16 @@ import com.orm.SugarContext;
 import com.tmp.smartthings.R;
 import com.tmp.smartthings.model.Device;
 import com.tmp.smartthings.util.DeviceUtil;
-import com.tmp.smartthings.view.adapter.DeviceListAdapter;
+import com.tmp.smartthings.view.adapter.ScanDeviceAdapter;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Date;
 
 public class ScanDeviceActivity extends AppCompatActivity {
 
     private ListView mListView;
     private FloatingActionButton mFabReload;
-    private DeviceListAdapter mAdapter;
+    private ScanDeviceAdapter mAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
@@ -67,7 +62,7 @@ public class ScanDeviceActivity extends AppCompatActivity {
 
         mListView = (ListView) findViewById(R.id.lv_scan_device);
 
-        mAdapter = new DeviceListAdapter(this);
+        mAdapter = new ScanDeviceAdapter(this);
         mAdapter.updateDevices(new ArrayList<Device>());
 
         mListView.setAdapter(mAdapter);
@@ -191,7 +186,7 @@ public class ScanDeviceActivity extends AppCompatActivity {
                 public void run() {
 
                     if (!mDeviceUtil.isExisted(device.getAddress()))
-                        mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0));
+                        mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
                 }
             });
         }

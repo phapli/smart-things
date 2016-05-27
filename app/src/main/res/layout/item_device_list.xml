@@ -9,7 +9,7 @@
         android:id="@+id/iv_device_list_icon"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:src="@drawable/ic_nav_item"
+        android:src="@drawable/light_bulb_icon"
         android:layout_alignParentLeft="true"
         />
 

@@ -24,8 +24,16 @@ public class CommonUtil {
 
     public int byteToInt(byte[] input){
         byte[] new_bytes = {0x00, 0x00, 0x00, 0x00};
-        System.arraycopy(input, 0, new_bytes, 2, 2);
+        System.arraycopy(input, 0, new_bytes, 3, 1);
+        System.arraycopy(input, 1, new_bytes, 2, 1);
         return ByteBuffer.wrap(new_bytes).getInt();
+    }
+
+    public String byteToHex(byte[] input){
+        final StringBuilder stringBuilder = new StringBuilder(input.length);
+        for (byte byteChar : input)
+            stringBuilder.append(String.format("%02X ", byteChar));
+        return stringBuilder.toString();
     }
 
 }

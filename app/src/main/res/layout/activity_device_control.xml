@@ -33,20 +33,24 @@
     </android.support.design.widget.AppBarLayout>
 
     <TextView
+        android:id="@+id/tv_control_device_status"
+        android:layout_width="wrap_content"
+        android:text="Available"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal" />
+
+    <TextView
         android:id="@+id/tv_control_device_data"
         android:layout_width="wrap_content"
-        android:layout_gravity="bottom|left"
-        android:layout_height="wrap_content" />
-
-    <com.github.clans.fab.FloatingActionButton
-        android:id="@+id/fab_device_control_switch"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|left" />
+
+    <ImageView
+        android:id="@+id/iv_device_control_switch"
+        android:layout_width="200dp"
+        android:layout_height="250dp"
         android:layout_gravity="center"
-        android:src="@drawable/ic_progress"
-        fab:fab_colorNormal="@color/colorAccent"
-        fab:fab_colorPressed="@color/colorAccent"
-        fab:fab_colorRipple="@color/colorAccent" />
+        android:src="@drawable/light_bulb_gray" />
 
     <com.github.clans.fab.FloatingActionMenu
         android:id="@+id/fab_device_control_menu"
@@ -54,9 +58,9 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         fab:menu_animationDelayPerItem="0"
-        fab:menu_colorNormal="#FFB805"
-        fab:menu_colorPressed="#F2AB00"
-        fab:menu_colorRipple="#D99200"
+        fab:menu_colorNormal="@color/accent_material_light"
+        fab:menu_colorPressed="@color/accent_material_dark"
+        fab:menu_colorRipple="@color/accent_material_light"
         fab:menu_icon="@drawable/ic_menu"
         fab:menu_labels_hideAnimation="@anim/jump_to_down"
         fab:menu_labels_showAnimation="@anim/jump_from_down"
@@ -65,7 +69,7 @@
 
         <com.github.clans.fab.FloatingActionButton
             android:id="@+id/fab_device_control_edit_name"
-            style="@style/MenuButtonsStyle"
+            style="@style/MenuButtonsSmall.Green"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_edit"
@@ -73,27 +77,27 @@
 
         <com.github.clans.fab.FloatingActionButton
             android:id="@+id/fab_device_control_change_pass"
-            style="@style/MenuButtonsStyle"
+            style="@style/MenuButtonsSmall.Green"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_edit"
+            android:src="@drawable/ic_lock_outline_white_24dp"
             fab:fab_label="@string/change_pin" />
 
         <com.github.clans.fab.FloatingActionButton
             android:id="@+id/fab_device_control_add_user"
-            style="@style/MenuButtonsStyle"
+            style="@style/MenuButtonsSmall.Green"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_edit"
+            android:src="@drawable/ic_person_add_white_24dp"
             fab:fab_label="@string/add_user" />
 
         <com.github.clans.fab.FloatingActionButton
             android:id="@+id/fab_device_control_delete_device"
-            style="@style/MenuButtonsStyle"
+            style="@style/MenuButtonsSmall.Green"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_edit"
-            fab:fab_label="@string/remove_device" />
+            android:src="@drawable/ic_delete_white_24dp"
+            fab:fab_label="@string/remove_device"/>
     </com.github.clans.fab.FloatingActionMenu>
 
 </android.support.design.widget.CoordinatorLayout>

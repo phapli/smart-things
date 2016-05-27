@@ -17,7 +17,9 @@ public class CommonUtilUnitTest {
 
     @Test
     public void byteToInt() throws Exception {
-        int result = CommonUtil.getInstance().byteToInt(new byte[]{0x40, 0x7B});
+        byte[] input =new byte[]{(byte) 0x8D, (byte) 0xE5};
+        int result = CommonUtil.getInstance().byteToInt(input);
+        byte[] outBytes = CommonUtil.getInstance().intToByte(result);
         assertEquals(result, 16507);
     }
 

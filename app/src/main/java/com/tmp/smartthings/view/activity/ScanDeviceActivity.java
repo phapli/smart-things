@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -103,6 +104,17 @@ public class ScanDeviceActivity extends AppCompatActivity {
             finish();
             return;
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return(true);
+        }
+
+        return(super.onOptionsItemSelected(item));
     }
 
     @Override

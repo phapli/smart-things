@@ -19,6 +19,7 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -282,6 +283,17 @@ public class DeviceControlActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return(true);
+        }
+
+        return(super.onOptionsItemSelected(item));
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
@@ -389,8 +401,8 @@ public class DeviceControlActivity extends AppCompatActivity {
             return;
         }
         new MaterialDialog.Builder(DeviceControlActivity.this)
-                .title(R.string.add_user)
-                .content("pin: " + mCommonUtil.byteToInt(data) + "\nNow, you must disconnect on this device for another device access.")
+                .title("Pin: " + mCommonUtil.byteToInt(data))
+                .content("Now, you must disconnect on this device for another device access.")
                 .positiveText(R.string.disconnected)
                 .negativeText(R.string.late)
                 .onPositive(new MaterialDialog.SingleButtonCallback() {

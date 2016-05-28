@@ -25,6 +25,7 @@ import com.tmp.smartthings.model.Result;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class includes a small subset of standard GATT attributes for demonstration purposes.
@@ -49,7 +50,9 @@ public class GattUtil {
     public static final String GEN_PIN_CHAR = "0000ffab-0000-1000-8000-00805f9b34fb";
     public static final String REQ_OWNER_RIGHT_CHAR = "0000ffae-0000-1000-8000-00805f9b34fb";
     public static final String CHANGE_OWNER_PIN_CHAR = "0000ffaf-0000-1000-8000-00805f9b34fb";
+    public static final String ACK_CHAR = "0000ffb1-0000-1000-8000-00805f9b34fb";
     public static List<String> characteristics = new ArrayList<>();
+    public static Map<String, String> shortNameMap = new HashMap<>();
     static {
         characteristics.add(SWITCH_CHAR);
         characteristics.add(AUTH_PIN_CHAR);
@@ -59,6 +62,10 @@ public class GattUtil {
         characteristics.add(GEN_PIN_CHAR);
         characteristics.add(REQ_OWNER_RIGHT_CHAR);
         characteristics.add(CHANGE_OWNER_PIN_CHAR);
+
+        for(String characteristic: characteristics){
+            shortNameMap.put(shortName(characteristic), characteristic);
+        }
     }
 
     private static GattUtil ourInstance = new GattUtil();
@@ -106,10 +113,14 @@ public class GattUtil {
         return result;
     }
 
-    public String shortName(String uuid) {
+    public static String shortName(String uuid) {
         if(uuid!=null && uuid.length()>8){
             return uuid.substring(4,8);
         }
         return "NG";
+    }
+
+    public String getUUID(String shortName) {
+        return shortNameMap.get(shortName);
     }
 }

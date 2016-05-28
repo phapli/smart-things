@@ -33,6 +33,9 @@ public class Device extends Model{
     @Column(name = "last_use")
     private long last_use;
 
+    @Column(name = "is_admin")
+    private boolean is_admin;
+
     public Device() {
         super();
     }
@@ -45,6 +48,7 @@ public class Device extends Model{
         this.pin = pin;
         this.position = position;
         this.last_use = last_use;
+        this.is_admin = false;
     }
 
     public String getAddress() {
@@ -94,4 +98,6 @@ public class Device extends Model{
     public void setLast_use(long last_use) {
         this.last_use = last_use;
     }
+
+    
 }

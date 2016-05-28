@@ -64,6 +64,8 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String EXTRA_NOTIFY =
+            "com.example.bluetooth.le.EXTRA_NOTIFY";
     public final static String EXTRA_UUID =
             "com.example.bluetooth.le.EXTRA_UUID";
 
@@ -104,7 +106,7 @@ public class BluetoothLeService extends Service {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic, false);
             }
         }
 
@@ -119,7 +121,7 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic, true);
         }
     };
 
@@ -129,13 +131,14 @@ public class BluetoothLeService extends Service {
     }
 
     private void broadcastUpdate(final String action,
-                                 final BluetoothGattCharacteristic characteristic) {
+                                 final BluetoothGattCharacteristic characteristic, boolean notify) {
         final Intent intent = new Intent(action);
         final byte[] data = characteristic.getValue();
         UUID uuid = characteristic.getUuid();
         if (data != null && data.length > 0 && uuid != null) {
             intent.putExtra(EXTRA_DATA, data);
             intent.putExtra(EXTRA_UUID, uuid.toString());
+            intent.putExtra(EXTRA_NOTIFY, notify);
         }
         sendBroadcast(intent);
     }

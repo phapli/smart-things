@@ -7,20 +7,17 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
         android:text="@string/old_pin"
-        android:textColor="#80000000"
         android:textSize="@dimen/customTitle" />
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
+        android:layout_height="wrap_content">
+
         <ImageView
             android:id="@+id/iv_show_old_pin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
             android:layout_alignParentRight="true"
             android:src="@drawable/ic_eye_grey600_18dp" />
 
@@ -28,11 +25,9 @@
             android:id="@+id/ed_old_pin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:maxLength="5"
-            android:inputType="numberSigned|numberPassword"
             android:layout_toLeftOf="@id/iv_show_old_pin"
-            android:textColor="#000000"
+            android:inputType="numberSigned|numberPassword"
+            android:maxLength="5"
             android:textSize="@dimen/customEntry" />
 
 
@@ -41,21 +36,17 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
         android:text="@string/new_pin"
-        android:textColor="#80000000"
         android:textSize="@dimen/customTitle" />
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/iv_show_new_pin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
             android:layout_alignParentRight="true"
             android:src="@drawable/ic_eye_grey600_18dp" />
 
@@ -63,11 +54,9 @@
             android:id="@+id/ed_new_pin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:maxLength="5"
-            android:inputType="numberSigned|numberPassword"
             android:layout_toLeftOf="@id/iv_show_new_pin"
-            android:textColor="#000000"
+            android:inputType="numberSigned|numberPassword"
+            android:maxLength="5"
             android:textSize="@dimen/customEntry" />
 
     </RelativeLayout>

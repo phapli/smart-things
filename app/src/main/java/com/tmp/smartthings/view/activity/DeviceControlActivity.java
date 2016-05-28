@@ -41,6 +41,7 @@ import com.tmp.smartthings.util.DeviceUtil;
 import com.tmp.smartthings.util.GattUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 
@@ -52,7 +53,8 @@ public class DeviceControlActivity extends AppCompatActivity {
     public static final String EXTRAS_DEVICE_NEW = "DEVICE_NEW";
 
     private static final String TAG = DeviceControlActivity.class.getName();
-    private FloatingActionMenu mFabMenu;
+    private FloatingActionMenu mFabDeviceMenu;
+    private FloatingActionMenu mFabUserMenu;
     private ImageView mSwitch;
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics;
@@ -68,11 +70,13 @@ public class DeviceControlActivity extends AppCompatActivity {
     private FloatingActionButton mFabEditName;
     private FloatingActionButton mFabChangePass;
     private FloatingActionButton mFabAddUser;
-    private Device mDevice;
     private FloatingActionButton mFabDeleteDevice;
+    private FloatingActionButton mFabRequestAdmin;
+    private Device mDevice;
     private EditText oldPinInput;
     private EditText newPinInput;
     private View positiveAction;
+    private int mAdminPin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,11 +105,13 @@ public class DeviceControlActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mFabMenu = (FloatingActionMenu) findViewById(R.id.fab_device_control_menu);
+        mFabDeviceMenu = (FloatingActionMenu) findViewById(R.id.fab_device_control_menu);
+        mFabUserMenu = (FloatingActionMenu) findViewById(R.id.fab_device_control_user_menu);
         mFabEditName = (FloatingActionButton) findViewById(R.id.fab_device_control_edit_name);
         mFabAddUser = (FloatingActionButton) findViewById(R.id.fab_device_control_add_user);
         mFabChangePass = (FloatingActionButton) findViewById(R.id.fab_device_control_change_pass);
         mFabDeleteDevice = (FloatingActionButton) findViewById(R.id.fab_device_control_delete_device);
+        mFabRequestAdmin = (FloatingActionButton) findViewById(R.id.fab_device_control_req_owner);
         mSwitch = (ImageView) findViewById(R.id.iv_device_control_switch);
         mDataText = (TextView) findViewById(R.id.tv_control_device_data);
 
@@ -126,9 +132,12 @@ public class DeviceControlActivity extends AppCompatActivity {
                     }
                 }
                 mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR), value);
-                mFabMenu.close(true);
+                mFabDeviceMenu.close(true);
             }
         });
+
+        mFabUserMenu.setClosedOnTouchOutside(true);
+        mFabDeviceMenu.setClosedOnTouchOutside(true);
 
         mFabEditName.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -148,7 +157,33 @@ public class DeviceControlActivity extends AppCompatActivity {
                                 mTitle.setText(input.toString());
                             }
                         }).show();
-                mFabMenu.close(true);
+                mFabDeviceMenu.close(true);
+            }
+        });
+
+        mFabRequestAdmin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new MaterialDialog.Builder(DeviceControlActivity.this)
+                        .title(R.string.input_pin_title)
+                        .content(R.string.input_pin_content)
+                        .inputType(InputType.TYPE_CLASS_NUMBER |
+                                InputType.TYPE_NUMBER_FLAG_SIGNED)
+                        .inputRange(5, 5)
+                        .negativeText(android.R.string.cancel)
+                        .positiveText(android.R.string.ok)
+                        .input(R.string.input_pin_hint, R.string.input_pin_prefill, false, new MaterialDialog.InputCallback() {
+                            @Override
+                            public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                                try {
+                                    mAdminPin = Integer.valueOf(newPinInput.getText().toString());
+                                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.REQ_OWNER_RIGHT_CHAR),  mCommonUtil.intToByte(mAdminPin));
+                                } catch (Exception e) {
+                                }
+                            }
+
+                        }).show();
+                mFabDeviceMenu.close(true);
             }
         });
 
@@ -171,7 +206,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                             }
                         })
                         .show();
-                mFabMenu.close(true);
+                mFabDeviceMenu.close(true);
             }
         });
 
@@ -266,7 +301,7 @@ public class DeviceControlActivity extends AppCompatActivity {
 
                 dialog.show();
                 positiveAction.setEnabled(false); // disabled by default
-                mFabMenu.close(true);
+                mFabDeviceMenu.close(true);
             }
         });
 
@@ -274,7 +309,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.GEN_PIN_CHAR));
-                mFabMenu.close(true);
+                mFabDeviceMenu.close(true);
             }
         });
 
@@ -287,10 +322,10 @@ public class DeviceControlActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
-                return(true);
+                return (true);
         }
 
-        return(super.onOptionsItemSelected(item));
+        return (super.onOptionsItemSelected(item));
     }
 
     @Override
@@ -371,9 +406,19 @@ public class DeviceControlActivity extends AppCompatActivity {
 
                 byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
                 String uuid = intent.getStringExtra(BluetoothLeService.EXTRA_UUID);
+                boolean notify = intent.getBooleanExtra(BluetoothLeService.EXTRA_NOTIFY, false);
+                byte ack;
+                byte option;
 
                 if (data != null) {
                     switch (uuid) {
+                        case GattUtil.ACK_CHAR:
+                            if(data.length==4){
+                                ack = data[0];
+                                byte[] uuid_byte = Arrays.copyOfRange(data,1,2);
+                                option = data[3];
+                                uuid = mGattUtil.getUUID(mCommonUtil.byteToHex(uuid_byte));
+                            }
                         case GattUtil.SWITCH_CHAR:
                             deviceCurrentStatus = data;
                             updateSwitchStage(data[1] == 0x01);
@@ -384,6 +429,9 @@ public class DeviceControlActivity extends AppCompatActivity {
                         case GattUtil.GET_CONNECTED_LIST_CHAR:
                             processLogData(data);
                             break;
+                        case GattUtil.REQ_OWNER_RIGHT_CHAR:
+
+
                     }
                     displayData(uuid, data);
                 }

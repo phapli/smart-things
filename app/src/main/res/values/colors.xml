@@ -9,5 +9,8 @@
     <color name="light_grey">#EEEEEE</color>
     <color name="white_transparent">#99FFFFFF</color>
     <color name="black">#000</color>
+    <color name="yello">#dce205</color>
+    <color name="red">#da2c25</color>
+    <color name="green">#39bf48</color>
 
 </resources>

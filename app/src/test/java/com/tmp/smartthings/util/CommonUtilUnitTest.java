@@ -37,4 +37,17 @@ public class CommonUtilUnitTest {
 
         assertEquals (result, result);
     }
+
+    @Test
+    public void testSwitch(){
+        String uuid = "a";
+        switch (uuid){
+            case "a":
+                System.out.println(uuid);
+                uuid = "b";
+            case "b":
+                System.out.println(uuid);
+                break;
+        }
+    }
 }

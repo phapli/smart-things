@@ -6,7 +6,7 @@
     android:layout_height="70dp">
 
     <ImageView
-        android:id="@+id/iv_device_list_icon"
+        android:id="@+id/iv_user_list_icon"
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:src="@drawable/light_bulb_icon"
@@ -14,16 +14,16 @@
         />
 
     <ImageView
-        android:id="@+id/iv_device_list_status"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:src="@drawable/ic_bluetooth_connected_white_24dp"
+        android:id="@+id/iv_user_list_status"
+        android:layout_width="5dp"
+        android:layout_height="5dp"
+        android:src="@drawable/ic_progress"
         android:tint="@color/green"
         android:layout_alignParentRight="true"
         />
 
     <TextView
-        android:id="@+id/tv_device_list_name"
+        android:id="@+id/tv_user_list_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ellipsize="end"
@@ -33,20 +33,20 @@
         android:textStyle="bold"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:layout_toRightOf="@id/iv_device_list_icon"
+        android:layout_toRightOf="@id/iv_user_list_icon"
         />
 
     <TextView
-        android:id="@+id/tv_device_list_address"
+        android:id="@+id/tv_user_list_address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ellipsize="end"
         android:singleLine="true"
         android:text="Address"
         android:textSize="14sp"
-        android:layout_below="@id/tv_device_list_name"
+        android:layout_below="@id/tv_user_list_name"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:layout_toRightOf="@id/iv_device_list_icon"
+        android:layout_toRightOf="@id/iv_user_list_icon"
         />
 </RelativeLayout>

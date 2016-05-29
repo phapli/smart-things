@@ -99,5 +99,11 @@ public class Device extends Model{
         this.last_use = last_use;
     }
 
-    
+    public boolean is_admin() {
+        return is_admin;
+    }
+
+    public void setIs_admin(boolean is_admin) {
+        this.is_admin = is_admin;
+    }
 }

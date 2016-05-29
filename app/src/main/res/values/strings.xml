@@ -31,4 +31,6 @@
     <string name="log">Log</string>
     <string name="user_list">User List</string>
     <string name="black_list">Black List</string>
+    <string name="available">Available</string>
+    <string name="unavailable">Unavailable</string>
 </resources>

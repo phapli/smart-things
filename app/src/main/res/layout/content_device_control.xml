@@ -33,10 +33,10 @@
             android:layout_width="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_height="wrap_content"
-            android:text="Searching ..." />
+            android:layout_marginRight="@dimen/fab_margin"
+            android:text="@string/scanning" />
 
     </LinearLayout>
-
 
     <TextView
         android:id="@+id/tv_control_device_data"

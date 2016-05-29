@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -31,7 +32,6 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
-import com.orm.SugarContext;
 import com.tmp.smartthings.R;
 import com.tmp.smartthings.model.Device;
 import com.tmp.smartthings.model.Result;
@@ -47,6 +47,14 @@ import java.util.Map;
 
 public class DeviceControlActivity extends AppCompatActivity {
 
+    private ImageView mImageStatus;
+    private TextView mTextStatus;
+    private int newOwnerPin;
+
+    public enum ConnectionStatus {
+        SEARCHING, CONNECTED, DISCOVERED, AUTHENTICATED, DISCONNECTED
+    }
+
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String EXTRAS_DEVICE_PIN = "DEVICE_PIN";
@@ -59,9 +67,9 @@ public class DeviceControlActivity extends AppCompatActivity {
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics;
     private TextView mDataText;
-    private byte[] deviceCurrentStatus;
+    private byte[] mSwicthData = {0x00, 0x00};
 
-    private boolean mConnected;
+    private ConnectionStatus mConnectionStatus = ConnectionStatus.SEARCHING;
     private CommonUtil mCommonUtil = CommonUtil.getInstance();
     private GattUtil mGattUtil = GattUtil.getInstance();
     private DeviceUtil mDeviceUtil = DeviceUtil.getInstance();
@@ -105,6 +113,9 @@ public class DeviceControlActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        mImageStatus = (ImageView) findViewById(R.id.iv_control_device_status);
+        mTextStatus = (TextView) findViewById(R.id.tv_control_device_status);
+
         mFabDeviceMenu = (FloatingActionMenu) findViewById(R.id.fab_device_control_menu);
         mFabUserMenu = (FloatingActionMenu) findViewById(R.id.fab_device_control_user_menu);
         mFabEditName = (FloatingActionButton) findViewById(R.id.fab_device_control_edit_name);
@@ -118,26 +129,45 @@ public class DeviceControlActivity extends AppCompatActivity {
         mSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                byte[] value = {0x00, 0x00};
-                if (deviceCurrentStatus != null) {
-                    value = deviceCurrentStatus;
-                }
-                if (value[1] == 0x00) {
-                    for (int i = 0; i < value.length; i++) {
-                        value[i] = 0x01;
+//                if (mConnectionStatus == ConnectionStatus.AUTHENTICATED) {
+                    byte[] value = {0x00, 0x00};
+                    if (mSwicthData != null) {
+                        value = mSwicthData;
                     }
-                } else {
-                    for (int i = 0; i < value.length; i++) {
-                        value[i] = 0x00;
+                    if (value[1] == 0x00) {
+                        for (int i = 0; i < value.length; i++) {
+                            value[i] = 0x01;
+                        }
+                    } else {
+                        for (int i = 0; i < value.length; i++) {
+                            value[i] = 0x00;
+                        }
                     }
-                }
-                mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR), value);
-                mFabDeviceMenu.close(true);
+                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR), value);
+                    mFabDeviceMenu.close(true);
+//                }
             }
         });
 
         mFabUserMenu.setClosedOnTouchOutside(true);
         mFabDeviceMenu.setClosedOnTouchOutside(true);
+
+        mFabUserMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+            @Override
+            public void onMenuToggle(boolean opened) {
+                if (opened) {
+                    mFabDeviceMenu.close(true);
+                }
+            }
+        });
+        mFabDeviceMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
+            @Override
+            public void onMenuToggle(boolean opened) {
+                if (opened) {
+                    mFabUserMenu.close(true);
+                }
+            }
+        });
 
         mFabEditName.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -176,9 +206,11 @@ public class DeviceControlActivity extends AppCompatActivity {
                             @Override
                             public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
                                 try {
-                                    mAdminPin = Integer.valueOf(newPinInput.getText().toString());
-                                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.REQ_OWNER_RIGHT_CHAR),  mCommonUtil.intToByte(mAdminPin));
+                                    mAdminPin = Integer.valueOf(input.toString());
+                                    Log.d(TAG, "onInput: " + mAdminPin);
+                                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.REQ_OWNER_RIGHT_CHAR), mCommonUtil.intToByte(mAdminPin));
                                 } catch (Exception e) {
+                                    Log.e(TAG, "Request Admin: ", e);
                                 }
                             }
 
@@ -232,11 +264,11 @@ public class DeviceControlActivity extends AppCompatActivity {
                                     newPin = Integer.valueOf(newPinInput.getText().toString());
                                     if (oldPin == mDevice.getPin()) {
                                         mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.CHANGE_OWNER_PIN_CHAR), mCommonUtil.intToByte(newPin));
-                                        mDevice.setPin(newPin);
-                                        mDevice.save();
+                                        newOwnerPin = newPin;
                                         return;
                                     }
                                 } catch (Exception e) {
+                                    Log.e(TAG, "Request Admin: ", e);
                                 }
                                 Toast.makeText(DeviceControlActivity.this, "Wrong pin", Toast.LENGTH_SHORT).show();
                             }
@@ -309,7 +341,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.GEN_PIN_CHAR));
-                mFabDeviceMenu.close(true);
+                mFabUserMenu.close(true);
             }
         });
 
@@ -321,6 +353,7 @@ public class DeviceControlActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
+                mBluetoothLeService.close();
                 finish();
                 return (true);
         }
@@ -331,6 +364,9 @@ public class DeviceControlActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        updateAdminUI();
+        mConnectionStatus = ConnectionStatus.SEARCHING;
+        updateConnectionStatus();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(mDevice.getAddress());
@@ -341,6 +377,8 @@ public class DeviceControlActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        mConnectionStatus = ConnectionStatus.DISCONNECTED;
+        updateConnectionStatus();
         mBluetoothLeService.disconnect();
         unregisterReceiver(mGattUpdateReceiver);
     }
@@ -348,10 +386,10 @@ public class DeviceControlActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mBluetoothLeService.close();
         unbindService(mServiceConnection);
         mBluetoothLeService = null;
         stopDisconnectTimer();
-        SugarContext.terminate();
     }
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -361,6 +399,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
             if (!mBluetoothLeService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
+                mBluetoothLeService.close();
                 finish();
             }
             // Automatically connects to the device upon successful start-up initialization.
@@ -379,48 +418,66 @@ public class DeviceControlActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                mConnected = true;
-                Toast.makeText(DeviceControlActivity.this, "CONNECTED", Toast.LENGTH_SHORT).show();
+                mConnectionStatus = ConnectionStatus.CONNECTED;
+                updateConnectionStatus();
                 invalidateOptionsMenu();
                 resetDisconnectTimer();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                mConnected = false;
-                Toast.makeText(DeviceControlActivity.this, "DISCONNECTED", Toast.LENGTH_SHORT).show();
-                finish();
+                mConnectionStatus = ConnectionStatus.DISCONNECTED;
+                updateConnectionStatus();
+                if (mNew) {
+                    mBluetoothLeService.close();
+                    finish();
+                }
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // check All service support and authenticate
                 Result result = mGattUtil.discoverGatt(mBluetoothLeService.getSupportedGattServices());
-                Toast.makeText(DeviceControlActivity.this, result.message, Toast.LENGTH_SHORT).show();
                 if (result.status == 0) {
+                    mConnectionStatus = ConnectionStatus.DISCOVERED;
+                    updateConnectionStatus();
                     mGattCharacteristicsMap = (Map<String, BluetoothGattCharacteristic>) result.getData("gatt_map");
+                    mBluetoothLeService.setCharacteristicNotification(mGattCharacteristicsMap.get(GattUtil.ACK_CHAR), true);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, "Request Admin: ", e);
+                    }
+                    mBluetoothLeService.setCharacteristicNotification(mGattCharacteristicsMap.get(GattUtil.GET_CONNECTED_LIST_CHAR), true);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        Log.e(TAG, "Request Admin: ", e);
+                    }
                     mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.AUTH_PIN_CHAR), mCommonUtil.intToByte(mDevice.getPin()));
                 } else {
-                    finish();
+                    if (mNew) {
+                        mBluetoothLeService.close();
+                        finish();
+                    } else {
+                        mConnectionStatus = ConnectionStatus.DISCONNECTED;
+                        updateConnectionStatus();
+                    }
                 }
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                if (!mSaved && mNew) {
-                    long id = mDevice.save();
-                    Toast.makeText(DeviceControlActivity.this, "save device: " + id, Toast.LENGTH_SHORT).show();
-                    mSaved = true;
-                }
-
                 byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
                 String uuid = intent.getStringExtra(BluetoothLeService.EXTRA_UUID);
                 boolean notify = intent.getBooleanExtra(BluetoothLeService.EXTRA_NOTIFY, false);
-                byte ack;
-                byte option;
+                byte notify_ack = 0x00;
+                byte notify_option = 0x00;
+                String notify_uuid = "";
 
                 if (data != null) {
                     switch (uuid) {
                         case GattUtil.ACK_CHAR:
-                            if(data.length==4){
-                                ack = data[0];
-                                byte[] uuid_byte = Arrays.copyOfRange(data,1,2);
-                                option = data[3];
-                                uuid = mGattUtil.getUUID(mCommonUtil.byteToHex(uuid_byte));
+                            if (data.length == 4) {
+                                notify_ack = data[0];
+                                byte[] uuid_byte = Arrays.copyOfRange(data, 1, 3);
+                                notify_option = data[3];
+                                notify_uuid = mGattUtil.getUUID(mCommonUtil.byteToHex(mCommonUtil.reverse(uuid_byte)));
                             }
+                            break;
                         case GattUtil.SWITCH_CHAR:
-                            deviceCurrentStatus = data;
+                            mSwicthData = data;
                             updateSwitchStage(data[1] == 0x01);
                             break;
                         case GattUtil.GEN_PIN_CHAR:
@@ -429,9 +486,48 @@ public class DeviceControlActivity extends AppCompatActivity {
                         case GattUtil.GET_CONNECTED_LIST_CHAR:
                             processLogData(data);
                             break;
+                        case GattUtil.NOTIFY_DESCRIPTOR:
+
+                            break;
+                    }
+
+                    switch (notify_uuid) {
+                        case GattUtil.SWITCH_CHAR:
+                            if (notify_ack == 0x01) {
+                                mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR));
+                            }
+                            break;
+                        case GattUtil.CHANGE_OWNER_PIN_CHAR:
+                            if (notify_ack == 0x01) {
+                                Toast.makeText(DeviceControlActivity.this, "CHANGE PIN SUCCESS", Toast.LENGTH_SHORT).show();
+                                mDevice.setPin(newOwnerPin);
+                                mDevice.save();
+                            }
+                            break;
                         case GattUtil.REQ_OWNER_RIGHT_CHAR:
-
-
+                            if (notify_ack == 0x01) {
+                                mDevice.setIs_admin(true);
+                                mDevice.setPin(mAdminPin);
+                                updateAdminUI();
+                                Toast.makeText(DeviceControlActivity.this, "You are admin", Toast.LENGTH_SHORT).show();
+                            }
+                            break;
+                        case GattUtil.AUTH_PIN_CHAR:
+                            if (notify_ack == 0x01) {
+                                mConnectionStatus = ConnectionStatus.AUTHENTICATED;
+                                boolean isAdmin = notify_option == 0x00 ? false : true;
+                                mDevice.setIs_admin(isAdmin);
+                                updateAdminUI();
+                                if (!mSaved && mNew) {
+                                    long id = mDevice.save();
+                                    Toast.makeText(DeviceControlActivity.this, "save device: " + id, Toast.LENGTH_SHORT).show();
+                                    mSaved = true;
+                                    mNew = false;
+                                }
+                                mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR));
+                                updateConnectionStatus();
+                            }
+                            break;
                     }
                     displayData(uuid, data);
                 }
@@ -439,8 +535,51 @@ public class DeviceControlActivity extends AppCompatActivity {
         }
     };
 
+    private void updateConnectionStatus() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (mConnectionStatus) {
+                    case SEARCHING:
+                    case CONNECTED:
+                    case DISCOVERED:
+                        mImageStatus.setImageResource(R.drawable.ic_bluetooth_searching_white_24dp);
+                        mImageStatus.setColorFilter(Color.YELLOW);
+                        mTextStatus.setText(R.string.scanning);
+                        break;
+                    case AUTHENTICATED:
+                        mImageStatus.setImageResource(R.drawable.ic_bluetooth_connected_white_24dp);
+                        mImageStatus.setColorFilter(Color.GREEN);
+                        mTextStatus.setText(R.string.available);
+                        break;
+                    case DISCONNECTED:
+                        mImageStatus.setImageResource(R.drawable.ic_bluetooth_disabled_white_24dp);
+                        mImageStatus.setColorFilter(Color.RED);
+                        mTextStatus.setText(R.string.unavailable);
+                        break;
+                }
+
+            }
+        });
+    }
+
+    private void updateAdminUI() {
+        mFabDeviceMenu.removeAllMenuButtons();
+        if (mDevice.is_admin()) {
+            mFabDeviceMenu.addMenuButton(mFabEditName);
+            mFabDeviceMenu.addMenuButton(mFabChangePass);
+            mFabDeviceMenu.addMenuButton(mFabDeleteDevice);
+            mFabUserMenu.setVisibility(View.VISIBLE);
+        } else {
+            mFabDeviceMenu.addMenuButton(mFabEditName);
+            mFabDeviceMenu.addMenuButton(mFabRequestAdmin);
+            mFabDeviceMenu.addMenuButton(mFabDeleteDevice);
+            mFabUserMenu.setVisibility(View.INVISIBLE);
+        }
+    }
+
     private void processLogData(byte[] data) {
-        Toast.makeText(this, "Log: " + mCommonUtil.byteToHex(data), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "OMG: " + mCommonUtil.byteToHex(data), Toast.LENGTH_SHORT).show();
     }
 
     private void processGenPinData(byte[] data) {
@@ -449,7 +588,7 @@ public class DeviceControlActivity extends AppCompatActivity {
             return;
         }
         new MaterialDialog.Builder(DeviceControlActivity.this)
-                .title("Pin: " + mCommonUtil.byteToInt(data))
+                .title("Pin: " + String.format("%05d", mCommonUtil.byteToInt(data)))
                 .content("Now, you must disconnect on this device for another device access.")
                 .positiveText(R.string.disconnected)
                 .negativeText(R.string.late)

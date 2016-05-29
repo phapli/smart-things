@@ -32,8 +32,18 @@ public class CommonUtil {
     public String byteToHex(byte[] input){
         final StringBuilder stringBuilder = new StringBuilder(input.length);
         for (byte byteChar : input)
-            stringBuilder.append(String.format("%02X ", byteChar));
+            stringBuilder.append(String.format("%02x", byteChar));
         return stringBuilder.toString();
+    }
+
+    public byte[] reverse(byte[] input){
+        for(int i = 0; i < input.length / 2; i++)
+        {
+            byte temp = input[i];
+            input[i] = input[input.length - i - 1];
+            input[input.length - i - 1] = temp;
+        }
+        return input;
     }
 
 }

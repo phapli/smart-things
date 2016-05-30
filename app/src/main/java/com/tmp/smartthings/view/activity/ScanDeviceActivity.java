@@ -25,10 +25,12 @@ import com.github.clans.fab.FloatingActionButton;
 import com.orm.SugarContext;
 import com.tmp.smartthings.R;
 import com.tmp.smartthings.model.Device;
+import com.tmp.smartthings.util.CommonUtil;
 import com.tmp.smartthings.util.DeviceUtil;
 import com.tmp.smartthings.view.adapter.ScanDeviceAdapter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 public class ScanDeviceActivity extends AppCompatActivity {
@@ -189,16 +191,18 @@ public class ScanDeviceActivity extends AppCompatActivity {
     }
 
     private DeviceUtil mDeviceUtil =DeviceUtil.getInstance();
+    private CommonUtil mCommonUtil = CommonUtil.getInstance();
     // Device scan callback.
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
         @Override
-        public void onLeScan(final BluetoothDevice device, int rssi, byte[] scanRecord) {
+        public void onLeScan(final BluetoothDevice device, int rssi, final byte[] scanRecord) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-
-                    if (!mDeviceUtil.isExisted(device.getAddress()))
+                    if (!mDeviceUtil.isExisted(device.getAddress())) {
                         mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
+                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
+                    }
                 }
             });
         }

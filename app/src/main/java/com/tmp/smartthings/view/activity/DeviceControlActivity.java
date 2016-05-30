@@ -129,7 +129,7 @@ public class DeviceControlActivity extends AppCompatActivity {
         mSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                if (mConnectionStatus == ConnectionStatus.AUTHENTICATED) {
+                if (mConnectionStatus == ConnectionStatus.AUTHENTICATED && !mFabUserMenu.isOpened() && !mFabDeviceMenu.isOpened()) {
                     byte[] value = {0x00, 0x00};
                     if (mSwicthData != null) {
                         value = mSwicthData;
@@ -145,7 +145,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                     }
                     mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR), value);
                     mFabDeviceMenu.close(true);
-//                }
+                }
             }
         });
 
@@ -437,17 +437,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                     updateConnectionStatus();
                     mGattCharacteristicsMap = (Map<String, BluetoothGattCharacteristic>) result.getData("gatt_map");
                     mBluetoothLeService.setCharacteristicNotification(mGattCharacteristicsMap.get(GattUtil.ACK_CHAR), true);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "Request Admin: ", e);
-                    }
                     mBluetoothLeService.setCharacteristicNotification(mGattCharacteristicsMap.get(GattUtil.GET_CONNECTED_LIST_CHAR), true);
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Log.e(TAG, "Request Admin: ", e);
-                    }
                     mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.AUTH_PIN_CHAR), mCommonUtil.intToByte(mDevice.getPin()));
                 } else {
                     if (mNew) {

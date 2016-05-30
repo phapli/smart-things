@@ -36,6 +36,13 @@ public class CommonUtil {
         return stringBuilder.toString();
     }
 
+    public String byteToHexWithSpaceFormat(byte[] input){
+        final StringBuilder stringBuilder = new StringBuilder(input.length);
+        for (byte byteChar : input)
+            stringBuilder.append(String.format("%02X ", byteChar));
+        return stringBuilder.toString();
+    }
+
     public byte[] reverse(byte[] input){
         for(int i = 0; i < input.length / 2; i++)
         {

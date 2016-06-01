@@ -1,18 +1,29 @@
 package com.tmp.smartthings.view.activity;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.annotation.NonNull;
+import android.os.ParcelUuid;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.InputType;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -27,12 +38,15 @@ import com.tmp.smartthings.R;
 import com.tmp.smartthings.model.Device;
 import com.tmp.smartthings.util.CommonUtil;
 import com.tmp.smartthings.util.DeviceUtil;
+import com.tmp.smartthings.util.GattUtil;
 import com.tmp.smartthings.view.adapter.ScanDeviceAdapter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class ScanDeviceActivity extends AppCompatActivity {
 
     private ListView mListView;
@@ -47,6 +61,11 @@ public class ScanDeviceActivity extends AppCompatActivity {
     // Stops scanning after 10 seconds.
     private static final long SCAN_PERIOD = 10000;
     private TextView mTitle;
+    private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
+    private BluetoothLeScanner mBluetoothLeScanner;
+    private ArrayList<ScanFilter> mScanFilters;
+    private ScanSettings mScanSettings;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +125,59 @@ public class ScanDeviceActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
+            mScanSettings = new ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .build();
+            mScanFilters = new ArrayList<>();
+            ScanFilter sCanFilter = new ScanFilter.Builder().setServiceUuid(new ParcelUuid(UUID.fromString(GattUtil.CONTROL_SERVICE))).build();
+            mScanFilters.add(sCanFilter);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Android M Permission check
+            if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("This app needs location access");
+                builder.setMessage("Please grant location access so this app can detect beacons.");
+                builder.setPositiveButton(android.R.string.ok, null);
+                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @TargetApi(Build.VERSION_CODES.M)
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_REQUEST_COARSE_LOCATION);
+                    }
+                });
+                builder.show();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_COARSE_LOCATION: {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "coarse location permission granted");
+                } else {
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Functionality limited");
+                    builder.setMessage("Since location access has not been granted, this app will not be able to discover beacons when in the background.");
+                    builder.setPositiveButton(android.R.string.ok, null);
+                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+
+                        @Override
+                        public void onDismiss(DialogInterface dialog) {
+                        }
+
+                    });
+                    builder.show();
+                }
+                return;
+            }
+        }
     }
 
     @Override
@@ -113,10 +185,10 @@ public class ScanDeviceActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
-                return(true);
+                return (true);
         }
 
-        return(super.onOptionsItemSelected(item));
+        return (super.onOptionsItemSelected(item));
     }
 
     @Override
@@ -158,10 +230,19 @@ public class ScanDeviceActivity extends AppCompatActivity {
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(mStopScanRunable, SCAN_PERIOD);
             mScanning = true;
-            mBluetoothAdapter.startLeScan(mLeScanCallback);
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBluetoothLeScanner.startScan(mScanFilters, mScanSettings, mScanCallback);
+            } else {
+                mBluetoothAdapter.startLeScan(mLeScanCallback);
+            }
         } else {
             mScanning = false;
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBluetoothLeScanner.stopScan(mScanCallback);
+            } else {
+                mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            }
             mHandler.removeCallbacks(mStopScanRunable);
         }
     }
@@ -171,7 +252,11 @@ public class ScanDeviceActivity extends AppCompatActivity {
         public void run() {
             mScanning = false;
             updateRefreshUI(false);
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBluetoothLeScanner.stopScan(mScanCallback);
+            } else {
+                mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            }
         }
     };
 
@@ -190,7 +275,7 @@ public class ScanDeviceActivity extends AppCompatActivity {
         }
     }
 
-    private DeviceUtil mDeviceUtil =DeviceUtil.getInstance();
+    private DeviceUtil mDeviceUtil = DeviceUtil.getInstance();
     private CommonUtil mCommonUtil = CommonUtil.getInstance();
     // Device scan callback.
     private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
@@ -201,10 +286,48 @@ public class ScanDeviceActivity extends AppCompatActivity {
                 public void run() {
                     if (!mDeviceUtil.isExisted(device.getAddress())) {
                         mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
-                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
+//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
                     }
                 }
             });
+        }
+    };
+
+    private ScanCallback mScanCallback = new ScanCallback()
+    {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result)
+        {
+            Log.i("callbackType", String.valueOf(callbackType));
+            final BluetoothDevice device = result.getDevice();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (!mDeviceUtil.isExisted(device.getAddress())) {
+                        mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
+//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onBatchScanResults(List<ScanResult> results)
+        {
+            for (ScanResult sr : results)
+            {
+                Log.i("Scan Item: ", sr.toString());
+                final BluetoothDevice device = sr.getDevice();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!mDeviceUtil.isExisted(device.getAddress())) {
+                            mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
+//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
         }
     };
 
@@ -219,7 +342,7 @@ public class ScanDeviceActivity extends AppCompatActivity {
                 .positiveText(android.R.string.ok)
                 .input(R.string.input_pin_hint, R.string.input_pin_prefill, false, new MaterialDialog.InputCallback() {
                     @Override
-                    public void onInput(@NonNull MaterialDialog dialog, CharSequence input) {
+                    public void onInput(MaterialDialog dialog, CharSequence input) {
                         Intent intent = new Intent(ScanDeviceActivity.this, DeviceControlActivity.class);
                         intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
                         intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
@@ -241,6 +364,5 @@ public class ScanDeviceActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        SugarContext.terminate();
     }
 }

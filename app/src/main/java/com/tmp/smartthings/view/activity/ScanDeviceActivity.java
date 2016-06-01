@@ -1,6 +1,7 @@
 package com.tmp.smartthings.view.activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -19,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelUuid;
+import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -47,7 +49,7 @@ import java.util.List;
 import java.util.UUID;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-public class ScanDeviceActivity extends AppCompatActivity {
+public class ScanDeviceActivity extends ActionBarActivity {
 
     private ListView mListView;
     private FloatingActionButton mFabReload;
@@ -130,10 +132,63 @@ public class ScanDeviceActivity extends AppCompatActivity {
             mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
             mScanSettings = new ScanSettings.Builder()
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .setReportDelay(0)
                     .build();
             mScanFilters = new ArrayList<>();
             ScanFilter sCanFilter = new ScanFilter.Builder().setServiceUuid(new ParcelUuid(UUID.fromString(GattUtil.CONTROL_SERVICE))).build();
             mScanFilters.add(sCanFilter);
+            mScanCallback = new ScanCallback()
+            {
+                @Override
+                public void onScanResult(int callbackType, ScanResult result)
+                {
+                    Log.i("callbackType", String.valueOf(callbackType));
+                    final BluetoothDevice device = result.getDevice();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!mDeviceUtil.isExisted(device.getAddress())) {
+                                mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
+//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public void onBatchScanResults(List<ScanResult> results)
+                {
+                    for (ScanResult sr : results)
+                    {
+                        Log.i("Scan Item: ", sr.toString());
+                        final BluetoothDevice device = sr.getDevice();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (!mDeviceUtil.isExisted(device.getAddress())) {
+                                    mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
+//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
+                    }
+                }
+            };
+        }else {
+            mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
+                @Override
+                public void onLeScan(final BluetoothDevice device, int rssi, final byte[] scanRecord) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!mDeviceUtil.isExisted(device.getAddress())) {
+                                mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
+//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+                }
+            };
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Android M Permission check
@@ -239,6 +294,7 @@ public class ScanDeviceActivity extends AppCompatActivity {
         } else {
             mScanning = false;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBluetoothLeScanner.flushPendingScanResults(mScanCallback);
                 mBluetoothLeScanner.stopScan(mScanCallback);
             } else {
                 mBluetoothAdapter.stopLeScan(mLeScanCallback);
@@ -253,6 +309,7 @@ public class ScanDeviceActivity extends AppCompatActivity {
             mScanning = false;
             updateRefreshUI(false);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                mBluetoothLeScanner.flushPendingScanResults(mScanCallback);
                 mBluetoothLeScanner.stopScan(mScanCallback);
             } else {
                 mBluetoothAdapter.stopLeScan(mLeScanCallback);
@@ -278,58 +335,9 @@ public class ScanDeviceActivity extends AppCompatActivity {
     private DeviceUtil mDeviceUtil = DeviceUtil.getInstance();
     private CommonUtil mCommonUtil = CommonUtil.getInstance();
     // Device scan callback.
-    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-        @Override
-        public void onLeScan(final BluetoothDevice device, int rssi, final byte[] scanRecord) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (!mDeviceUtil.isExisted(device.getAddress())) {
-                        mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
-//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
-                    }
-                }
-            });
-        }
-    };
+    private BluetoothAdapter.LeScanCallback mLeScanCallback;
 
-    private ScanCallback mScanCallback = new ScanCallback()
-    {
-        @Override
-        public void onScanResult(int callbackType, ScanResult result)
-        {
-            Log.i("callbackType", String.valueOf(callbackType));
-            final BluetoothDevice device = result.getDevice();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (!mDeviceUtil.isExisted(device.getAddress())) {
-                        mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
-//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void onBatchScanResults(List<ScanResult> results)
-        {
-            for (ScanResult sr : results)
-            {
-                Log.i("Scan Item: ", sr.toString());
-                final BluetoothDevice device = sr.getDevice();
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!mDeviceUtil.isExisted(device.getAddress())) {
-                            mAdapter.addDevice(new Device(device.getName(), device.getAddress(), Device.Device_Type.LIGHT_SWITCH, 0, 0, new Date().getTime()));
-//                        Toast.makeText(ScanDeviceActivity.this, mCommonUtil.byteToHexWithSpaceFormat(Arrays.copyOfRange(scanRecord, 11, 17)), Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-            }
-        }
-    };
+    private ScanCallback mScanCallback;
 
     public void showInputDialog(final Device device) {
         new MaterialDialog.Builder(this)

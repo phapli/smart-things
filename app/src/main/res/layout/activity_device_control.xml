@@ -30,58 +30,67 @@
 
         </android.support.v7.widget.Toolbar>
 
+        <android.support.design.widget.TabLayout
+            android:id="@+id/tabs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_device_control" />
+    <android.support.v4.view.ViewPager
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <com.github.clans.fab.FloatingActionMenu
-        android:id="@+id/fab_device_control_user_menu"
+    <!--<com.github.clans.fab.FloatingActionMenu-->
+    <!--android:id="@+id/fab_device_control_user_menu"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_gravity="start|bottom"-->
+    <!--fab:menu_animationDelayPerItem="0"-->
+    <!--fab:menu_colorNormal="@color/accent_material_light"-->
+    <!--fab:menu_colorPressed="@color/accent_material_dark"-->
+    <!--fab:menu_colorRipple="@color/accent_material_light"-->
+    <!--fab:menu_icon="@drawable/ic_person_white_24dp"-->
+    <!--fab:menu_labels_hideAnimation="@anim/jump_to_down"-->
+    <!--fab:menu_labels_showAnimation="@anim/jump_from_down"-->
+    <!--fab:menu_labels_style="@style/MenuLabelsStyle"-->
+    <!--fab:menu_labels_position="right"-->
+    <!--fab:menu_shadowColor="#444">-->
+
+    <!--<com.github.clans.fab.FloatingActionButton-->
+    <!--android:id="@+id/fab_device_control_user_list"-->
+    <!--style="@style/MenuButtonsSmall.Green"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:src="@drawable/ic_group_white_24dp"-->
+    <!--fab:fab_label="@string/user_list" />-->
+
+    <!--<com.github.clans.fab.FloatingActionButton-->
+    <!--android:id="@+id/fab_device_control_black_list"-->
+    <!--style="@style/MenuButtonsSmall.Green"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:src="@drawable/ic_do_not_disturb_on_white_24dp"-->
+    <!--fab:fab_label="@string/black_list" />-->
+
+    <!--<com.github.clans.fab.FloatingActionButton-->
+    <!--android:id="@+id/fab_device_control_log"-->
+    <!--style="@style/MenuButtonsSmall.Green"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:src="@drawable/ic_history_white_24dp"-->
+    <!--fab:fab_label="@string/log"/>-->
+    <!--</com.github.clans.fab.FloatingActionMenu>-->
+
+
+    <TextView
+        android:id="@+id/tv_control_device_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="start|bottom"
-        fab:menu_animationDelayPerItem="0"
-        fab:menu_colorNormal="@color/accent_material_light"
-        fab:menu_colorPressed="@color/accent_material_dark"
-        fab:menu_colorRipple="@color/accent_material_light"
-        fab:menu_icon="@drawable/ic_person_white_24dp"
-        fab:menu_labels_hideAnimation="@anim/jump_to_down"
-        fab:menu_labels_showAnimation="@anim/jump_from_down"
-        fab:menu_labels_style="@style/MenuLabelsStyle"
-        fab:menu_labels_position="right"
-        fab:menu_shadowColor="#444">
-
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_device_control_add_user"
-            style="@style/MenuButtonsSmall.Green"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_person_add_white_24dp"
-            fab:fab_label="@string/add_user" />
-
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_device_control_user_list"
-            style="@style/MenuButtonsSmall.Green"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_group_white_24dp"
-            fab:fab_label="@string/user_list" />
-
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_device_control_black_list"
-            style="@style/MenuButtonsSmall.Green"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_do_not_disturb_on_white_24dp"
-            fab:fab_label="@string/black_list" />
-
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/fab_device_control_log"
-            style="@style/MenuButtonsSmall.Green"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_history_white_24dp"
-            fab:fab_label="@string/log"/>
-    </com.github.clans.fab.FloatingActionMenu>
+        android:text="No Data"
+        android:gravity="bottom|left" />
 
 
     <com.github.clans.fab.FloatingActionMenu
@@ -116,6 +125,14 @@
             fab:fab_label="@string/request_owner" />
 
         <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/fab_device_control_add_user"
+            style="@style/MenuButtonsSmall.Green"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_person_add_white_24dp"
+            fab:fab_label="@string/add_user" />
+
+        <com.github.clans.fab.FloatingActionButton
             android:id="@+id/fab_device_control_change_pass"
             style="@style/MenuButtonsSmall.Green"
             android:layout_width="wrap_content"
@@ -129,7 +146,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_delete_white_24dp"
-            fab:fab_label="@string/remove_device"/>
+            fab:fab_label="@string/remove_device" />
     </com.github.clans.fab.FloatingActionMenu>
 
 </android.support.design.widget.CoordinatorLayout>

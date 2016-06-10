@@ -13,6 +13,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -39,16 +41,19 @@ import com.tmp.smartthings.service.BluetoothLeService;
 import com.tmp.smartthings.util.CommonUtil;
 import com.tmp.smartthings.util.DeviceUtil;
 import com.tmp.smartthings.util.GattUtil;
+import com.tmp.smartthings.view.adapter.SectionsPagerAdapter;
+import com.tmp.smartthings.view.fragment.ControlFragment;
+import com.tmp.smartthings.view.fragment.LogFragment;
+import com.tmp.smartthings.view.fragment.UserFragment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
+import java.util.Random;
 
-public class DeviceControlActivity extends AppCompatActivity {
+public class DeviceControlActivity extends AppCompatActivity implements ControlFragment.ControlListener, UserFragment.UserListener, LogFragment.LogListener{
 
-    private ImageView mImageStatus;
-    private TextView mTextStatus;
     private int newOwnerPin;
 
     public enum ConnectionStatus {
@@ -62,17 +67,17 @@ public class DeviceControlActivity extends AppCompatActivity {
 
     private static final String TAG = DeviceControlActivity.class.getName();
     private FloatingActionMenu mFabDeviceMenu;
-    private FloatingActionMenu mFabUserMenu;
-    private ImageView mSwitch;
     private BluetoothLeService mBluetoothLeService;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics;
     private TextView mDataText;
     private byte[] mSwicthData = {0x00, 0x00};
 
     private ConnectionStatus mConnectionStatus = ConnectionStatus.SEARCHING;
+
     private CommonUtil mCommonUtil = CommonUtil.getInstance();
     private GattUtil mGattUtil = GattUtil.getInstance();
     private DeviceUtil mDeviceUtil = DeviceUtil.getInstance();
+
     private Map<String, BluetoothGattCharacteristic> mGattCharacteristicsMap;
     private boolean mNew;
     private FloatingActionButton mFabEditName;
@@ -85,6 +90,9 @@ public class DeviceControlActivity extends AppCompatActivity {
     private EditText newPinInput;
     private View positiveAction;
     private int mAdminPin;
+
+    private SectionsPagerAdapter mSectionsPagerAdapter;
+    private ViewPager mViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,9 +107,9 @@ public class DeviceControlActivity extends AppCompatActivity {
         if (mNew) {
             mDevice = new Device(mDeviceName, mDeviceAddress, Device.Device_Type.LIGHT_SWITCH, mPin, 0, new Date().getTime());
         } else {
-            mDevice = mDeviceUtil.get(mDeviceAddress);
-            mDevice.setLast_use(new Date().getTime());
-            mDevice.save();
+            mDevice = new Device("Glock","", Device.Device_Type.LIGHT_SWITCH, 12345, 0, 0L);//mDeviceUtil.get(mDeviceAddress);
+//            mDevice.setLast_use(new Date().getTime());
+//            mDevice.save();
         }
 
         setContentView(R.layout.activity_device_control);
@@ -113,61 +121,27 @@ public class DeviceControlActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        mImageStatus = (ImageView) findViewById(R.id.iv_control_device_status);
-        mTextStatus = (TextView) findViewById(R.id.tv_control_device_status);
-
         mFabDeviceMenu = (FloatingActionMenu) findViewById(R.id.fab_device_control_menu);
-        mFabUserMenu = (FloatingActionMenu) findViewById(R.id.fab_device_control_user_menu);
         mFabEditName = (FloatingActionButton) findViewById(R.id.fab_device_control_edit_name);
         mFabAddUser = (FloatingActionButton) findViewById(R.id.fab_device_control_add_user);
         mFabChangePass = (FloatingActionButton) findViewById(R.id.fab_device_control_change_pass);
         mFabDeleteDevice = (FloatingActionButton) findViewById(R.id.fab_device_control_delete_device);
         mFabRequestAdmin = (FloatingActionButton) findViewById(R.id.fab_device_control_req_owner);
-        mSwitch = (ImageView) findViewById(R.id.iv_device_control_switch);
         mDataText = (TextView) findViewById(R.id.tv_control_device_data);
 
-        mSwitch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mConnectionStatus == ConnectionStatus.AUTHENTICATED && !mFabUserMenu.isOpened() && !mFabDeviceMenu.isOpened()) {
-                    byte[] value = {0x00, 0x00};
-                    if (mSwicthData != null) {
-                        value = mSwicthData;
-                    }
-                    if (value[1] == 0x00) {
-                        for (int i = 0; i < value.length; i++) {
-                            value[i] = 0x01;
-                        }
-                    } else {
-                        for (int i = 0; i < value.length; i++) {
-                            value[i] = 0x00;
-                        }
-                    }
-                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR), value);
-                    mFabDeviceMenu.close(true);
-                }
-            }
-        });
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), 3);
 
-        mFabUserMenu.setClosedOnTouchOutside(true);
+        // Set up the ViewPager with the sections adapter.
+        mViewPager = (ViewPager) findViewById(R.id.container);
+        mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.setOffscreenPageLimit(2);
+
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(mViewPager);
+
+
+
         mFabDeviceMenu.setClosedOnTouchOutside(true);
-
-        mFabUserMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-            @Override
-            public void onMenuToggle(boolean opened) {
-                if (opened) {
-                    mFabDeviceMenu.close(true);
-                }
-            }
-        });
-        mFabDeviceMenu.setOnMenuToggleListener(new FloatingActionMenu.OnMenuToggleListener() {
-            @Override
-            public void onMenuToggle(boolean opened) {
-                if (opened) {
-                    mFabUserMenu.close(true);
-                }
-            }
-        });
 
         mFabEditName.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -341,12 +315,46 @@ public class DeviceControlActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.GEN_PIN_CHAR));
-                mFabUserMenu.close(true);
+                mFabDeviceMenu.close(true);
             }
         });
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+//        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onDeviceSwitch() {
+        Toast.makeText(this, "switch ", Toast.LENGTH_SHORT).show();
+        updateSwitchStage(new Random().nextBoolean());
+        if (mConnectionStatus == ConnectionStatus.AUTHENTICATED && !mFabDeviceMenu.isOpened()) {
+            byte[] value = {0x00, 0x00};
+            if (mSwicthData != null) {
+                value = mSwicthData;
+            }
+            if (value[1] == 0x00) {
+                for (int i = 0; i < value.length; i++) {
+                    value[i] = 0x01;
+                }
+            } else {
+                for (int i = 0; i < value.length; i++) {
+                    value[i] = 0x00;
+                }
+            }
+            mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR), value);
+            mFabDeviceMenu.close(true);
+        }
+    }
+
+
+    @Override
+    public void onRemoveUser() {
+        //TODO
+    }
+
+    @Override
+    public void onUnbanUser() {
+        //TODO
     }
 
     @Override
@@ -365,8 +373,7 @@ public class DeviceControlActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateAdminUI();
-        mConnectionStatus = ConnectionStatus.SEARCHING;
-        updateConnectionStatus();
+//        updateConnectionStatus(ConnectionStatus.SEARCHING);
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(mDevice.getAddress());
@@ -377,8 +384,7 @@ public class DeviceControlActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        mConnectionStatus = ConnectionStatus.DISCONNECTED;
-        updateConnectionStatus();
+//        updateConnectionStatus(ConnectionStatus.DISCONNECTED);
         mBluetoothLeService.disconnect();
         unregisterReceiver(mGattUpdateReceiver);
     }
@@ -418,13 +424,11 @@ public class DeviceControlActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                mConnectionStatus = ConnectionStatus.CONNECTED;
-                updateConnectionStatus();
+                updateConnectionStatus(ConnectionStatus.CONNECTED);
                 invalidateOptionsMenu();
                 resetDisconnectTimer();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                mConnectionStatus = ConnectionStatus.DISCONNECTED;
-                updateConnectionStatus();
+                updateConnectionStatus(ConnectionStatus.DISCONNECTED);
                 if (mNew) {
                     mBluetoothLeService.close();
                     finish();
@@ -433,8 +437,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                 // check All service support and authenticate
                 Result result = mGattUtil.discoverGatt(mBluetoothLeService.getSupportedGattServices());
                 if (result.status == 0) {
-                    mConnectionStatus = ConnectionStatus.DISCOVERED;
-                    updateConnectionStatus();
+                    updateConnectionStatus(ConnectionStatus.DISCOVERED);
                     mGattCharacteristicsMap = (Map<String, BluetoothGattCharacteristic>) result.getData("gatt_map");
                     mBluetoothLeService.setCharacteristicNotification(mGattCharacteristicsMap.get(GattUtil.ACK_CHAR), true);
                     mBluetoothLeService.setCharacteristicNotification(mGattCharacteristicsMap.get(GattUtil.GET_CONNECTED_LIST_CHAR), true);
@@ -444,8 +447,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                         mBluetoothLeService.close();
                         finish();
                     } else {
-                        mConnectionStatus = ConnectionStatus.DISCONNECTED;
-                        updateConnectionStatus();
+                        updateConnectionStatus(ConnectionStatus.DISCONNECTED);
                     }
                 }
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
@@ -504,7 +506,6 @@ public class DeviceControlActivity extends AppCompatActivity {
                             break;
                         case GattUtil.AUTH_PIN_CHAR:
                             if (notify_ack == 0x01) {
-                                mConnectionStatus = ConnectionStatus.AUTHENTICATED;
                                 boolean isAdmin = notify_option == 0x00 ? false : true;
                                 mDevice.setIs_admin(isAdmin);
                                 updateAdminUI();
@@ -515,7 +516,7 @@ public class DeviceControlActivity extends AppCompatActivity {
                                     mNew = false;
                                 }
                                 mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR));
-                                updateConnectionStatus();
+                                updateConnectionStatus(ConnectionStatus.AUTHENTICATED);
                             }
                             break;
                     }
@@ -525,46 +526,27 @@ public class DeviceControlActivity extends AppCompatActivity {
         }
     };
 
-    private void updateConnectionStatus() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                switch (mConnectionStatus) {
-                    case SEARCHING:
-                    case CONNECTED:
-                    case DISCOVERED:
-                        mImageStatus.setImageResource(R.drawable.ic_bluetooth_searching_white_24dp);
-                        mImageStatus.setColorFilter(Color.YELLOW);
-                        mTextStatus.setText(R.string.scanning);
-                        break;
-                    case AUTHENTICATED:
-                        mImageStatus.setImageResource(R.drawable.ic_bluetooth_connected_white_24dp);
-                        mImageStatus.setColorFilter(Color.GREEN);
-                        mTextStatus.setText(R.string.available);
-                        break;
-                    case DISCONNECTED:
-                        mImageStatus.setImageResource(R.drawable.ic_bluetooth_disabled_white_24dp);
-                        mImageStatus.setColorFilter(Color.RED);
-                        mTextStatus.setText(R.string.unavailable);
-                        break;
-                }
+    private void updateConnectionStatus(ConnectionStatus connectionStatus) {
+        mConnectionStatus = connectionStatus;
+        ControlFragment controlFragment = (ControlFragment)getSupportFragmentManager().
+                findFragmentById(R.id.container);
 
-            }
-        });
+        if(controlFragment!=null){
+            controlFragment.updateConnectionStatus(connectionStatus);
+        }
     }
 
     private void updateAdminUI() {
         mFabDeviceMenu.removeAllMenuButtons();
         if (mDevice.is_admin()) {
             mFabDeviceMenu.addMenuButton(mFabEditName);
+            mFabDeviceMenu.addMenuButton(mFabAddUser);
             mFabDeviceMenu.addMenuButton(mFabChangePass);
             mFabDeviceMenu.addMenuButton(mFabDeleteDevice);
-            mFabUserMenu.setVisibility(View.VISIBLE);
         } else {
             mFabDeviceMenu.addMenuButton(mFabEditName);
             mFabDeviceMenu.addMenuButton(mFabRequestAdmin);
             mFabDeviceMenu.addMenuButton(mFabDeleteDevice);
-            mFabUserMenu.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -593,10 +575,11 @@ public class DeviceControlActivity extends AppCompatActivity {
 
 
     private void updateSwitchStage(boolean enable) {
-        if (enable) {
-            mSwitch.setImageResource(R.drawable.light_bulb_green);
-        } else {
-            mSwitch.setImageResource(R.drawable.light_bulb_gray);
+        ControlFragment controlFragment = (ControlFragment)getSupportFragmentManager().
+                findFragmentById(R.id.container);
+
+        if(controlFragment!=null){
+            controlFragment.updateSwitchStage(enable);
         }
     }
 

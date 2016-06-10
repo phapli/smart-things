@@ -33,4 +33,6 @@
     <string name="black_list">Black List</string>
     <string name="available">Available</string>
     <string name="unavailable">Unavailable</string>
+    <string name="title_activity_control">ControlActivity</string>
+    <string name="section_format">Hello World from section: %1$d</string>
 </resources>

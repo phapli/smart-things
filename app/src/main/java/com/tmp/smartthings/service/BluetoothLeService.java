@@ -111,6 +111,7 @@ public class BluetoothLeService extends Service {
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
+            Log.w(TAG, "onCharacteristicRead received: " + status);
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic, false);
             }
@@ -223,7 +224,7 @@ public class BluetoothLeService extends Service {
     /**
      * Connects to the GATT server hosted on the Bluetooth LE device.
      *
-     * @param address The device address of the destination device.
+     * @param address The device action of the destination device.
      * @return Return true if the connection is initiated successfully. The connection result
      * is reported asynchronously through the
      * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
@@ -231,7 +232,7 @@ public class BluetoothLeService extends Service {
      */
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
+            Log.w(TAG, "BluetoothAdapter not initialized or unspecified action.");
             return false;
         }
 
@@ -306,6 +307,7 @@ public class BluetoothLeService extends Service {
         BluetoothCommand bluetoothCommand = new BluetoothCommand(BluetoothCommand.CommandType.CharacteristicRead, characteristic);
         bluetoothCommandQueue.add(bluetoothCommand);
         if(bluetoothCommandQueue.size() == 1) {
+            Log.d(TAG, "readCharacteristic");
             return mBluetoothGatt.readCharacteristic(characteristic);
         }
         return true;
@@ -329,6 +331,7 @@ public class BluetoothLeService extends Service {
         bluetoothCommandQueue.add(bluetoothCommand);
         //if there is only 1 item in the queue, then write it.  If more than 1, we handle asynchronously in the callback above
         if(bluetoothCommandQueue.size() == 1){
+            Log.d(TAG, "writeCharacteristic");
             return mBluetoothGatt.writeCharacteristic(characteristic);
         }
         return true;

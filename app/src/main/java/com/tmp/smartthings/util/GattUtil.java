@@ -52,6 +52,7 @@ public class GattUtil {
     public static final String CHANGE_OWNER_PIN_CHAR = "0000ffaf-0000-1000-8000-00805f9b34fb";
     public static final String ACK_CHAR = "0000ffb1-0000-1000-8000-00805f9b34fb";
     public static final String DEBUG_CHAR = "0000ffa3-0000-1000-8000-00805f9b34fb";
+    public static final String TIMEOUT_CHAR = "0000ffb2-0000-1000-8000-00805f9b34fb";
     public static List<String> characteristics = new ArrayList<>();
     public static Map<String, String> shortNameMap = new HashMap<>();
     static {
@@ -64,7 +65,7 @@ public class GattUtil {
         characteristics.add(REQ_OWNER_RIGHT_CHAR);
         characteristics.add(CHANGE_OWNER_PIN_CHAR);
         characteristics.add(ACK_CHAR);
-        characteristics.add(DEBUG_CHAR);
+        characteristics.add(TIMEOUT_CHAR);
         for(String characteristic: characteristics){
             shortNameMap.put(shortName(characteristic), characteristic);
         }

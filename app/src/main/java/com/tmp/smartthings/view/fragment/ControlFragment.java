@@ -18,11 +18,12 @@ import android.widget.TextView;
 
 import com.tmp.smartthings.R;
 import com.tmp.smartthings.view.activity.DeviceControlActivity;
+import com.tmp.smartthings.view.adapter.SectionsPagerAdapter;
 
 /**
  * SectionsPagerAdapter placeholder fragment containing a simple view.
  */
-public class ControlFragment extends Fragment {
+public class ControlFragment extends Fragment implements SectionFragment{
     /**
      * The fragment argument representing the section number for this
      * fragment.
@@ -40,10 +41,9 @@ public class ControlFragment extends Fragment {
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static ControlFragment newInstance(int sectionNumber) {
+    public static ControlFragment newInstance() {
         ControlFragment fragment = new ControlFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
         return fragment;
     }
@@ -53,12 +53,19 @@ public class ControlFragment extends Fragment {
     // Container Activity must implement this interface
     public interface ControlListener {
         void onDeviceSwitch();
+        void onInit(int section);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mCallback.onInit(SectionsPagerAdapter.CONTROL_SECTION);
     }
 
     @Override
@@ -96,6 +103,7 @@ public class ControlFragment extends Fragment {
         return rootView;
     }
 
+    @Override
     public void updateConnectionStatus(DeviceControlActivity.ConnectionStatus mConnectionStatus) {
         switch (mConnectionStatus) {
             case SEARCHING:

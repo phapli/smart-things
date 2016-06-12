@@ -15,7 +15,7 @@ public class Device extends Model{
         LIGHT_SWITCH, DOOR_LOCK
     }
 
-    @Column(name = "address", index = true, unique = true)
+    @Column(name = "action", index = true, unique = true)
     private String address;
 
     @Column(name = "name")

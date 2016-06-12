@@ -9,11 +9,8 @@ import com.activeandroid.annotation.Table;
  */
 @Table(name = "User")
 public class User extends Model{
-    public enum User_Type {
-        LIGHT_SWITCH, DOOR_LOCK
-    }
 
-    @Column(name = "address", index = true)
+    @Column(name = "action", index = true)
     private String address;
 
     @Column(name = "device_address", index = true)
@@ -22,18 +19,18 @@ public class User extends Model{
     @Column(name = "name")
     private String name;
 
-    @Column(name = "user_type")
-    private User_Type user_type;
+    @Column(name = "register_time")
+    private long register_time;
 
     public User() {
         super();
     }
 
-    public User(String address, String device_address, String name, User_Type user_type) {
+    public User(String address, String device_address, String name, long register_time) {
         this.address = address;
         this.device_address = device_address;
         this.name = name;
-        this.user_type = user_type;
+        this.register_time = register_time;
     }
 
     public String getAddress() {
@@ -60,11 +57,4 @@ public class User extends Model{
         this.name = name;
     }
 
-    public User_Type getUser_type() {
-        return user_type;
-    }
-
-    public void setUser_type(User_Type user_type) {
-        this.user_type = user_type;
-    }
 }

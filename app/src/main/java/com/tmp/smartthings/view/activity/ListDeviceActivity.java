@@ -19,6 +19,7 @@ import com.tmp.smartthings.util.DeviceUtil;
 import com.tmp.smartthings.view.adapter.ListDeviceAdapter;
 
 import java.util.List;
+import java.util.Random;
 
 public class ListDeviceActivity extends AppCompatActivity {
 
@@ -64,6 +65,10 @@ public class ListDeviceActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Intent intent = new Intent(ListDeviceActivity.this, ScanDeviceActivity.class);
                 startActivity(intent);
+//                Device device = new Device("123", new Random().nextInt(100) + "", Device.Device_Type.LIGHT_SWITCH, 0, 0, 0L);
+//                device.save();
+//                mAdapter.addDevice(device);
+
             }
         });
     }

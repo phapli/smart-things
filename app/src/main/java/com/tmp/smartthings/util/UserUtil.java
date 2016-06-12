@@ -21,23 +21,23 @@ public class UserUtil {
 
     public List<User> getAll(String device_add) {
         return new Select()
-                .from(Device.class)
+                .from(User.class)
                 .where("device_address = ?", device_add)
                 .execute();
     }
 
     public boolean isExisted(String address, String device_add) {
         return new Select()
-                .from(Device.class)
-                .where("address = ?", address)
+                .from(User.class)
+                .where("action = ?", address)
                 .and("device_address = ?", device_add)
                 .count() > 0;
     }
 
     public Device get(String device_add, String address) {
         return new Select()
-                .from(Device.class)
-                .where("address = ?", address)
+                .from(User.class)
+                .where("action = ?", address)
                 .and("device_address = ?", device_add)
                 .executeSingle();
     }

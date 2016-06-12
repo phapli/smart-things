@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -35,26 +34,33 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.github.clans.fab.FloatingActionButton;
 import com.github.clans.fab.FloatingActionMenu;
 import com.tmp.smartthings.R;
+import com.tmp.smartthings.model.ActionLog;
 import com.tmp.smartthings.model.Device;
 import com.tmp.smartthings.model.Result;
+import com.tmp.smartthings.model.User;
 import com.tmp.smartthings.service.BluetoothLeService;
+import com.tmp.smartthings.util.ActionLogUtil;
 import com.tmp.smartthings.util.CommonUtil;
 import com.tmp.smartthings.util.DeviceUtil;
 import com.tmp.smartthings.util.GattUtil;
+import com.tmp.smartthings.util.UserUtil;
 import com.tmp.smartthings.view.adapter.SectionsPagerAdapter;
 import com.tmp.smartthings.view.fragment.ControlFragment;
 import com.tmp.smartthings.view.fragment.LogFragment;
+import com.tmp.smartthings.view.fragment.SectionFragment;
 import com.tmp.smartthings.view.fragment.UserFragment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class DeviceControlActivity extends AppCompatActivity implements ControlFragment.ControlListener, UserFragment.UserListener, LogFragment.LogListener{
+public class DeviceControlActivity extends AppCompatActivity implements ControlFragment.ControlListener, UserFragment.UserListener, LogFragment.LogListener {
 
     private int newOwnerPin;
+    private int mSectionSizes = 3;
 
     public enum ConnectionStatus {
         SEARCHING, CONNECTED, DISCOVERED, AUTHENTICATED, DISCONNECTED
@@ -77,6 +83,8 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
     private CommonUtil mCommonUtil = CommonUtil.getInstance();
     private GattUtil mGattUtil = GattUtil.getInstance();
     private DeviceUtil mDeviceUtil = DeviceUtil.getInstance();
+    private ActionLogUtil mActionLogUtil = ActionLogUtil.getInstance();
+    private UserUtil mUserUtil = UserUtil.getInstance();
 
     private Map<String, BluetoothGattCharacteristic> mGattCharacteristicsMap;
     private boolean mNew;
@@ -90,6 +98,9 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
     private EditText newPinInput;
     private View positiveAction;
     private int mAdminPin;
+
+    private List<ActionLog> mActionLogs = new ArrayList<>();
+    private List<User> mUsers = new ArrayList<>();
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
     private ViewPager mViewPager;
@@ -107,15 +118,24 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
         if (mNew) {
             mDevice = new Device(mDeviceName, mDeviceAddress, Device.Device_Type.LIGHT_SWITCH, mPin, 0, new Date().getTime());
         } else {
-            mDevice = new Device("Glock","", Device.Device_Type.LIGHT_SWITCH, 12345, 0, 0L);//mDeviceUtil.get(mDeviceAddress);
-//            mDevice.setLast_use(new Date().getTime());
-//            mDevice.save();
+            mDevice = mDeviceUtil.get(mDeviceAddress);
+            mDevice.setLast_use(new Date().getTime());
+            mDevice.save();
+            List<ActionLog> actionLogs = mActionLogUtil.getAll(mDevice.getAddress());
+            if (actionLogs != null) {
+                mActionLogs.addAll(actionLogs);
+            }
+
+            List<User> users = mUserUtil.getAll(mDevice.getAddress());
+            if (users != null) {
+                mUsers.addAll(users);
+            }
         }
 
         setContentView(R.layout.activity_device_control);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         final TextView mTitle = (TextView) toolbar.findViewById(R.id.tv_title);
-        mTitle.setText(mDeviceName);
+        mTitle.setText(mDevice.getName());
 
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -129,7 +149,7 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
         mFabRequestAdmin = (FloatingActionButton) findViewById(R.id.fab_device_control_req_owner);
         mDataText = (TextView) findViewById(R.id.tv_control_device_data);
 
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), 3);
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), mSectionSizes);
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
@@ -138,7 +158,6 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
-
 
 
         mFabDeviceMenu.setClosedOnTouchOutside(true);
@@ -196,6 +215,7 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
         mFabDeleteDevice.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.TIMEOUT_CHAR), new byte[]{0x01});
                 new MaterialDialog.Builder(DeviceControlActivity.this)
                         .title(R.string.confirm_delete_title)
                         .content(R.string.confirm_delete)
@@ -320,13 +340,35 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
         });
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-//        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onInit(int section) {
+        switch (section) {
+            case SectionsPagerAdapter.CONTROL_SECTION:
+                ControlFragment controlFragment = (ControlFragment) mSectionsPagerAdapter.getRegisteredFragment(SectionsPagerAdapter.CONTROL_SECTION);
+                if (controlFragment != null) {
+                    controlFragment.updateSwitchStage(false);
+                }
+                break;
+            case SectionsPagerAdapter.USER_SECTION:
+                UserFragment userFragment = (UserFragment) mSectionsPagerAdapter.getRegisteredFragment(SectionsPagerAdapter.USER_SECTION);
+                if (userFragment != null) {
+                    userFragment.updateListView(mUsers);
+                }
+                break;
+            case SectionsPagerAdapter.LOG_SECTION:
+                LogFragment logFragment = (LogFragment) mSectionsPagerAdapter.getRegisteredFragment(SectionsPagerAdapter.LOG_SECTION);
+                if (logFragment != null) {
+                    logFragment.updateListView(mActionLogs);
+                }
+                break;
+        }
     }
 
     @Override
     public void onDeviceSwitch() {
-        Toast.makeText(this, "switch ", Toast.LENGTH_SHORT).show();
-        updateSwitchStage(new Random().nextBoolean());
         if (mConnectionStatus == ConnectionStatus.AUTHENTICATED && !mFabDeviceMenu.isOpened()) {
             byte[] value = {0x00, 0x00};
             if (mSwicthData != null) {
@@ -373,7 +415,7 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
     protected void onResume() {
         super.onResume();
         updateAdminUI();
-//        updateConnectionStatus(ConnectionStatus.SEARCHING);
+        updateConnectionStatus(ConnectionStatus.SEARCHING);
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(mDevice.getAddress());
@@ -384,7 +426,7 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
     @Override
     protected void onPause() {
         super.onPause();
-//        updateConnectionStatus(ConnectionStatus.DISCONNECTED);
+        updateConnectionStatus(ConnectionStatus.DISCONNECTED);
         mBluetoothLeService.disconnect();
         unregisterReceiver(mGattUpdateReceiver);
     }
@@ -419,6 +461,7 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
     };
 
     private boolean mSaved = false;
+    private boolean mFreeze = false;
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -481,6 +524,17 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
                         case GattUtil.NOTIFY_DESCRIPTOR:
 
                             break;
+                        case GattUtil.GET_WHITE_LIST_CHAR:
+                            Toast.makeText(DeviceControlActivity.this, "OMG: " + mCommonUtil.byteToHex(data), Toast.LENGTH_SHORT).show();
+                            if (data.length == 9) {
+                                byte num = data[0];
+                                byte[] pin = Arrays.copyOfRange(data, 1, 3);
+                                byte[] mac = Arrays.copyOfRange(data, 3, 9);
+//                                if()
+                                mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.GET_WHITE_LIST_CHAR));
+                            }
+
+                            break;
                     }
 
                     switch (notify_uuid) {
@@ -516,7 +570,27 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
                                     mNew = false;
                                 }
                                 mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.SWITCH_CHAR));
+//                                mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.TIMEOUT_CHAR), new byte[]{0x00});
+                                mBluetoothLeService.readCharacteristic(mGattCharacteristicsMap.get(GattUtil.GET_WHITE_LIST_CHAR));
                                 updateConnectionStatus(ConnectionStatus.AUTHENTICATED);
+                            }
+                            break;
+                        case GattUtil.ACK_CHAR:
+                            if (notify_ack == 0x01) {
+                                int timeout = mCommonUtil.byteToInt(new byte[] {notify_option, 0x00});
+                                Log.d(TAG, "onReceive: timeout " + timeout );
+                                if(!mFreeze) {
+                                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.TIMEOUT_CHAR), new byte[]{0x00});
+                                }
+                            }
+                            break;
+                        case GattUtil.TIMEOUT_CHAR:
+                            if (notify_ack == 0x01) {
+                                int timeout = mCommonUtil.byteToInt(new byte[] {notify_option, 0x00});
+                                Log.d(TAG, "onReceive: timeout " + timeout );
+                                if(!mFreeze) {
+                                    mBluetoothLeService.writeCharacteristic(mGattCharacteristicsMap.get(GattUtil.TIMEOUT_CHAR), new byte[]{0x00});
+                                }
                             }
                             break;
                     }
@@ -528,30 +602,41 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
 
     private void updateConnectionStatus(ConnectionStatus connectionStatus) {
         mConnectionStatus = connectionStatus;
-        ControlFragment controlFragment = (ControlFragment)getSupportFragmentManager().
-                findFragmentById(R.id.container);
 
-        if(controlFragment!=null){
-            controlFragment.updateConnectionStatus(connectionStatus);
+        for (int i = 0; i < mSectionSizes; i++) {
+            SectionFragment fragment = (SectionFragment) mSectionsPagerAdapter.getRegisteredFragment(i);
+            if (fragment != null) {
+                fragment.updateConnectionStatus(connectionStatus);
+            }
         }
     }
 
     private void updateAdminUI() {
         mFabDeviceMenu.removeAllMenuButtons();
         if (mDevice.is_admin()) {
+            mSectionSizes = 3;
             mFabDeviceMenu.addMenuButton(mFabEditName);
             mFabDeviceMenu.addMenuButton(mFabAddUser);
             mFabDeviceMenu.addMenuButton(mFabChangePass);
             mFabDeviceMenu.addMenuButton(mFabDeleteDevice);
         } else {
+            mSectionSizes = 1;
             mFabDeviceMenu.addMenuButton(mFabEditName);
             mFabDeviceMenu.addMenuButton(mFabRequestAdmin);
             mFabDeviceMenu.addMenuButton(mFabDeleteDevice);
         }
+        mSectionsPagerAdapter.update(mSectionSizes);
     }
 
     private void processLogData(byte[] data) {
-        Toast.makeText(this, "OMG: " + mCommonUtil.byteToHex(data), Toast.LENGTH_SHORT).show();
+        ActionLog log = new ActionLog(mDevice.getAddress(), mCommonUtil.byteToHex(data), "Login", new Date().getTime());
+        log.save();
+        mActionLogs.add(log);
+        LogFragment logFragment = (LogFragment) mSectionsPagerAdapter.getRegisteredFragment(SectionsPagerAdapter.LOG_SECTION);
+
+        if (logFragment != null) {
+            logFragment.updateListView(mActionLogs);
+        }
     }
 
     private void processGenPinData(byte[] data) {
@@ -575,10 +660,9 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
 
 
     private void updateSwitchStage(boolean enable) {
-        ControlFragment controlFragment = (ControlFragment)getSupportFragmentManager().
-                findFragmentById(R.id.container);
+        ControlFragment controlFragment = (ControlFragment) mSectionsPagerAdapter.getRegisteredFragment(SectionsPagerAdapter.CONTROL_SECTION);
 
-        if(controlFragment!=null){
+        if (controlFragment != null) {
             controlFragment.updateSwitchStage(enable);
         }
     }
@@ -598,7 +682,7 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
         return intentFilter;
     }
 
-    public static final long DISCONNECT_TIMEOUT = 3000; // 3s = 3 * 1000 ms
+    public static final long DISCONNECT_TIMEOUT = 15000; // 15s = 15 * 1000 ms
 
     private Handler disconnectHandler = new Handler() {
         public void handleMessage(Message msg) {
@@ -608,13 +692,14 @@ public class DeviceControlActivity extends AppCompatActivity implements ControlF
     private Runnable disconnectCallback = new Runnable() {
         @Override
         public void run() {
-            mBluetoothLeService.disconnect();
+            mFreeze = true;
         }
     };
 
     public void resetDisconnectTimer() {
+        mFreeze = false;
         disconnectHandler.removeCallbacks(disconnectCallback);
-        //disconnectHandler.postDelayed(disconnectCallback, DISCONNECT_TIMEOUT);
+        disconnectHandler.postDelayed(disconnectCallback, DISCONNECT_TIMEOUT);
     }
 
     public void stopDisconnectTimer() {

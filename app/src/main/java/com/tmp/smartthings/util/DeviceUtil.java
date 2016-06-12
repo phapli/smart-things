@@ -27,14 +27,14 @@ public class DeviceUtil {
     public boolean isExisted(String address) {
         return new Select()
                 .from(Device.class)
-                .where("address = ?", address)
+                .where("action = ?", address)
                 .count() > 0;
     }
 
     public Device get(String address) {
         return new Select()
                 .from(Device.class)
-                .where("address = ?", address)
+                .where("action = ?", address)
                 .executeSingle();
     }
 }

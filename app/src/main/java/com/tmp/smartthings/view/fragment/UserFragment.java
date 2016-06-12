@@ -21,22 +21,26 @@ import android.widget.TextView;
 
 import com.github.clans.fab.FloatingActionButton;
 import com.tmp.smartthings.R;
+import com.tmp.smartthings.model.ActionLog;
 import com.tmp.smartthings.model.Device;
 import com.tmp.smartthings.model.User;
 import com.tmp.smartthings.util.UserUtil;
 import com.tmp.smartthings.view.activity.DeviceControlActivity;
 import com.tmp.smartthings.view.adapter.ListDeviceAdapter;
+import com.tmp.smartthings.view.adapter.ListUserAdapter;
+import com.tmp.smartthings.view.adapter.SectionsPagerAdapter;
 
+import java.util.Date;
 import java.util.List;
 
-public class UserFragment extends Fragment {
+public class UserFragment extends Fragment implements SectionFragment{
     private static final String ARG_SECTION_NUMBER = "section_number";
     private ImageView mImageStatus;
     private TextView mTextStatus;
 
     private static final String TAG = UserFragment.class.getName();
     private ListView mListView;
-    private ListDeviceAdapter mAdapter;
+    private ListUserAdapter mAdapter;
     private List<User> mUsers;
 
     public UserFragment() {
@@ -46,10 +50,9 @@ public class UserFragment extends Fragment {
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static UserFragment newInstance(int sectionNumber) {
+    public static UserFragment newInstance() {
         UserFragment fragment = new UserFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
         return fragment;
     }
@@ -58,6 +61,7 @@ public class UserFragment extends Fragment {
 
     // Container Activity must implement this interface
     public interface UserListener {
+        void onInit(int section);
         void onRemoveUser();
         void onUnbanUser();
     }
@@ -80,6 +84,14 @@ public class UserFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate");
+        User user = new User("1234", "4321", "Tin", new Date().getTime());
+        user.save();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mCallback.onInit(SectionsPagerAdapter.USER_SECTION);
     }
 
     @Override
@@ -92,7 +104,7 @@ public class UserFragment extends Fragment {
         mTextStatus = (TextView) rootView.findViewById(R.id.tv_control_device_status);
 
         mListView = (ListView) rootView.findViewById(R.id.lv_user_list);
-        mAdapter = new ListDeviceAdapter(getActivity());
+        mAdapter = new ListUserAdapter(getActivity());
         mListView.setAdapter(mAdapter);
 
 
@@ -106,6 +118,11 @@ public class UserFragment extends Fragment {
         return rootView;
     }
 
+    public void updateListView(List<User> users){
+        mAdapter.updateUsers(users);
+    }
+
+    @Override
     public void updateConnectionStatus(DeviceControlActivity.ConnectionStatus mConnectionStatus) {
         switch (mConnectionStatus) {
             case SEARCHING:

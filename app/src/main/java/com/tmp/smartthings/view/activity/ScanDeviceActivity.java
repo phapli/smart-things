@@ -131,8 +131,8 @@ public class ScanDeviceActivity extends ActionBarActivity {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
             mScanSettings = new ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                    .setReportDelay(0)
+//                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+//                    .setReportDelay(0)
                     .build();
             mScanFilters = new ArrayList<>();
             ScanFilter sCanFilter = new ScanFilter.Builder().setServiceUuid(new ParcelUuid(UUID.fromString(GattUtil.CONTROL_SERVICE))).build();

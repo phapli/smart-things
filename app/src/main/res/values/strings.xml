@@ -28,7 +28,7 @@
     <string name="new_pin">New Pin</string>
     <string name="late">Late</string>
     <string name="request_owner">Request Admin</string>
-    <string name="log">Log</string>
+    <string name="actionLog">Log</string>
     <string name="user_list">User List</string>
     <string name="black_list">Black List</string>
     <string name="available">Available</string>

@@ -19,20 +19,23 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.tmp.smartthings.R;
+import com.tmp.smartthings.model.ActionLog;
 import com.tmp.smartthings.model.User;
 import com.tmp.smartthings.view.activity.DeviceControlActivity;
 import com.tmp.smartthings.view.adapter.ListDeviceAdapter;
+import com.tmp.smartthings.view.adapter.ListLogAdapter;
+import com.tmp.smartthings.view.adapter.SectionsPagerAdapter;
 
 import java.util.List;
 
-public class LogFragment extends Fragment {
+public class LogFragment extends Fragment implements SectionFragment{
     private static final String ARG_SECTION_NUMBER = "section_number";
     private ImageView mImageStatus;
     private TextView mTextStatus;
 
     private static final String TAG = LogFragment.class.getName();
     private ListView mListView;
-    private ListDeviceAdapter mAdapter;
+    private ListLogAdapter mAdapter;
     private List<User> mUsers;
 
     public LogFragment() {
@@ -42,10 +45,9 @@ public class LogFragment extends Fragment {
      * Returns a new instance of this fragment for the given section
      * number.
      */
-    public static LogFragment newInstance(int sectionNumber) {
+    public static LogFragment newInstance() {
         LogFragment fragment = new LogFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
         return fragment;
     }
@@ -54,6 +56,7 @@ public class LogFragment extends Fragment {
 
     // Container Activity must implement this interface
     public interface LogListener {
+        void onInit(int section);
     }
 
     @Override
@@ -77,6 +80,12 @@ public class LogFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        mCallback.onInit(SectionsPagerAdapter.LOG_SECTION);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.d(TAG, "onCreateView");
@@ -86,7 +95,7 @@ public class LogFragment extends Fragment {
         mTextStatus = (TextView) rootView.findViewById(R.id.tv_control_device_status);
 
         mListView = (ListView) rootView.findViewById(R.id.lv_user_list);
-        mAdapter = new ListDeviceAdapter(getActivity());
+        mAdapter = new ListLogAdapter(getActivity());
         mListView.setAdapter(mAdapter);
 
 
@@ -100,6 +109,12 @@ public class LogFragment extends Fragment {
         return rootView;
     }
 
+
+    public void updateListView(List<ActionLog> logs){
+        mAdapter.updateLogs(logs);
+    }
+
+    @Override
     public void updateConnectionStatus(DeviceControlActivity.ConnectionStatus mConnectionStatus) {
         switch (mConnectionStatus) {
             case SEARCHING:

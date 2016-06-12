@@ -25,15 +25,10 @@
             android:value="2" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="com.tmp.smartthings.model.Device" />
+            android:value="com.tmp.smartthings.model.Device, com.tmp.smartthings.model.User, com.tmp.smartthings.model.ActionLog" />
 
         <activity
             android:name=".view.activity.ListDeviceActivity"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
-        <activity
-            android:name=".view.activity.DeviceControlActivity"
             android:configChanges="orientation"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar">
@@ -42,6 +37,12 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".view.activity.DeviceControlActivity"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar">
         </activity>
         <activity
             android:name=".view.activity.ScanDeviceActivity"
